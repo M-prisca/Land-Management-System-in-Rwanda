@@ -1,0 +1,132 @@
+ 1. User Page
+-Purpose: Manage all system users.
+
+Content:
+    Table of users with:
+    Full Name
+    Email
+    Role (Admin, Officer, Owner, etc.)
+    Status (Active, Deactivated)
+    Date Created
+
+Actions:
+    View user details
+    Edit user profile
+    Change role or deactivate account
+
+Features:
+    Search by any column (name, email, role…)
+    Pagination
+    Global search integration
+    Role-based access: only Admin can manage users
+
+2. Land Parcel Page
+-Purpose: Manage land parcel records.
+
+Content:
+    Table of land parcels with:
+    Parcel ID
+    Location (District/Sector/Plot No.)
+    Area (e.g., in m²)
+    Current Owner
+Status (Available, Sold, Under Request)
+
+Actions:
+    View details
+    Link ownership
+    Add new parcel
+    Edit or delete parcel
+    Features:
+    Search by parcel ID, owner, location…
+
+Pagination
+-Admin & Officer can edit; Owners can only view
+3. Ownership Page
+-Purpose: Record and track ownership history.
+
+Content:
+    Table of ownership records with:
+    Ownership ID
+    Owner Name
+    Parcel ID
+    Start Date – End Date
+    Transfer Status (Active, Transferred)
+
+Actions:
+    View history of a parcel
+    Transfer ownership
+
+Features:
+    Search by owner name, parcel ID, date range
+    Pagination
+    Role-based: Only Admin/Officer can initiate transfer
+
+4. Request Page
+Purpose: Handle public or owner requests.
+
+Content:
+Table of requests:
+    Request ID
+    Requester Name
+    Request Type (e.g., Ownership Transfer, New Title)
+    Status (Pending, Approved, Rejected)
+    Submission Date
+
+Actions:
+    View full request details
+    Accept/Reject requests
+    Comment/Respond
+
+Features:
+    Search by type, requester, status
+    Pagination
+    Role-based: Owners submit, Admin/Officers respond
+
+5. Document Page
+-Purpose: Manage documents related to land and ownership.
+
+Content:
+
+Table of documents:
+    Document ID
+    Document Type (Title Deed, Application Form…)
+    Linked Parcel/Request ID
+    Uploaded By
+    Date Uploaded
+    Status (Verified, Pending)
+
+Actions:
+    View document
+    Verify document
+    Upload new document
+
+Features:
+-Search by type, uploader, status
+
+Pagination
+-Access roles: Officer/Admin can verify; Owners can upload
+
+6. Dashboard Page
+Purpose: Summarize system data and show quick stats.
+
+Content:
+    Cards or widgets for:
+    Total Users
+    Total Land Parcels
+    Active Requests
+    Transfers This Month
+    Pending Documents
+
+Visuals:
+    Line or Bar Chart: Parcel Transfers Over Time
+    Pie Chart: Parcel Ownership by District
+    Features:
+    Quick navigation to other pages
+    Role-based view (Admin sees everything; Officer limited)
+
+7. Security & Utility Features
+    Reset Password via Email: Implement email service (e.g., Nodemailer).
+    2FA Login: Use TOTP (Time-based One-Time Password, e.g., Google Authenticator).
+    Role-Based Access: Guard routes & actions in frontend and backend.
+    Global Search: Use a top search bar across pages to search by name, ID, etc.
+    Table Search: Input fields above each table for column-based filtering.

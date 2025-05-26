@@ -1,0 +1,14 @@
+package rw.landManagementSystem.LandSystem.model;
+
+public enum RequestType {
+    LAND_REGISTRATION,
+    OWNERSHIP_TRANSFER,
+    TITLE_DEED_ISSUANCE,
+    LAND_SUBDIVISION,
+    LAND_CONSOLIDATION,
+    CHANGE_OF_USE,
+    MORTGAGE_REGISTRATION,
+    DISPUTE_RESOLUTION,
+    CERTIFICATE_REQUEST,
+    OTHER
+}

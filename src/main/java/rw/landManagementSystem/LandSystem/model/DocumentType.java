@@ -1,0 +1,17 @@
+package rw.landManagementSystem.LandSystem.model;
+
+public enum DocumentType {
+    TITLE_DEED,
+    SURVEY_PLAN,
+    IDENTITY_DOCUMENT,
+    PROOF_OF_PAYMENT,
+    COURT_ORDER,
+    INHERITANCE_DOCUMENT,
+    MORTGAGE_AGREEMENT,
+    LEASE_AGREEMENT,
+    SALE_AGREEMENT,
+    VALUATION_REPORT,
+    ENVIRONMENTAL_CLEARANCE,
+    BUILDING_PERMIT,
+    OTHER
+}
