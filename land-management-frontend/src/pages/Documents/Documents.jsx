@@ -1,14 +1,145 @@
 import React, { useState } from 'react';
-import { PlusIcon, MagnifyingGlassIcon, DocumentTextIcon, ArrowDownTrayIcon, EyeIcon } from '@heroicons/react/24/outline';
+import {
+  PlusIcon,
+  MagnifyingGlassIcon,
+  DocumentTextIcon,
+  ArrowDownTrayIcon,
+  EyeIcon,
+  CheckIcon,
+  XMarkIcon,
+  PencilIcon,
+  TrashIcon
+} from '@heroicons/react/24/outline';
+
+// Document Modal Component
+const DocumentModal = ({ isOpen, onClose, document = null, onSave }) => {
+  const [formData, setFormData] = useState({
+    documentName: '',
+    documentType: 'TITLE_DEED',
+    description: '',
+    landParcelId: '',
+    requestId: '',
+    file: null,
+  });
+
+  React.useEffect(() => {
+    if (document) {
+      setFormData({
+        documentName: document.fileName || '',
+        documentType: document.documentType || 'TITLE_DEED',
+        description: document.description || '',
+        landParcelId: document.landParcel?.parcelNumber || '',
+        requestId: document.requestId || '',
+        file: null,
+      });
+    }
+  }, [document]);
+
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === 'file') {
+      setFormData((prev) => ({ ...prev, file: files[0] }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(formData);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-md shadow-lg w-full max-w-lg p-6">
+        <h3 className="text-lg font-semibold mb-4">
+          {document ? 'Edit Document' : 'Upload New Document'}
+        </h3>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            name="documentName"
+            value={formData.documentName}
+            onChange={handleChange}
+            className="input"
+            required
+            placeholder="Document Name"
+          />
+          <select
+            name="documentType"
+            value={formData.documentType}
+            onChange={handleChange}
+            className="input"
+          >
+            <option value="TITLE_DEED">Title Deed</option>
+            <option value="APPLICATION_FORM">Application Form</option>
+            <option value="IDENTITY_DOCUMENT">Identity Document</option>
+            <option value="SURVEY_REPORT">Survey Report</option>
+            <option value="OWNERSHIP_CERTIFICATE">Ownership Certificate</option>
+            <option value="LEGAL_DOCUMENT">Legal Document</option>
+            <option value="OTHER">Other</option>
+          </select>
+          <textarea
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            className="input"
+            rows="3"
+            placeholder="Description"
+          />
+          <input
+            name="landParcelId"
+            value={formData.landParcelId}
+            onChange={handleChange}
+            className="input"
+            placeholder="Land Parcel ID (optional)"
+          />
+          <input
+            name="requestId"
+            value={formData.requestId}
+            onChange={handleChange}
+            className="input"
+            placeholder="Request ID (optional)"
+          />
+          {!document && (
+            <input
+              type="file"
+              name="file"
+              onChange={handleChange}
+              className="input"
+              required
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+            />
+          )}
+          <div className="flex justify-end space-x-2">
+            <button type="button" className="btn btn-outline" onClick={onClose}>
+              Cancel
+            </button>
+            <button type="submit" className="btn btn-primary">
+              {document ? 'Update' : 'Upload'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 function Documents() {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState(null);
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
   const canManageDocuments = ['ADMIN', 'LAND_OFFICER'].includes(currentUser.role);
 
   // Mock data for now
-  const mockDocuments = [
+  const [documents, setDocuments] = useState([
     {
       id: 1,
       documentType: 'TITLE_DEED',
@@ -17,7 +148,10 @@ function Documents() {
       uploader: { firstName: 'John', lastName: 'Doe' },
       status: 'VERIFIED',
       uploadDate: '2024-01-15',
-      fileSize: '2.5 MB'
+      fileSize: '2.5 MB',
+      description: 'Official title deed for land parcel LP001',
+      verifiedBy: 'Officer Smith',
+      verificationDate: '2024-01-16'
     },
     {
       id: 2,
@@ -27,7 +161,8 @@ function Documents() {
       uploader: { firstName: 'Jane', lastName: 'Smith' },
       status: 'PENDING',
       uploadDate: '2024-02-20',
-      fileSize: '1.8 MB'
+      fileSize: '1.8 MB',
+      description: 'Land survey report for parcel LP002'
     },
     {
       id: 3,
@@ -37,9 +172,36 @@ function Documents() {
       uploader: { firstName: 'Alice', lastName: 'Johnson' },
       status: 'REJECTED',
       uploadDate: '2024-03-10',
-      fileSize: '3.2 MB'
+      fileSize: '3.2 MB',
+      description: 'Ownership certificate for land parcel LP003',
+      rejectionReason: 'Document quality insufficient'
+    },
+    {
+      id: 4,
+      documentType: 'APPLICATION_FORM',
+      fileName: 'application_REQ001.pdf',
+      landParcel: null,
+      uploader: { firstName: 'Bob', lastName: 'Wilson' },
+      status: 'PENDING',
+      uploadDate: '2024-03-15',
+      fileSize: '0.8 MB',
+      description: 'Land ownership application form',
+      requestId: 'REQ001'
+    },
+    {
+      id: 5,
+      documentType: 'IDENTITY_DOCUMENT',
+      fileName: 'national_id_copy.pdf',
+      landParcel: null,
+      uploader: { firstName: 'Carol', lastName: 'Davis' },
+      status: 'VERIFIED',
+      uploadDate: '2024-03-18',
+      fileSize: '0.5 MB',
+      description: 'National ID copy for verification',
+      verifiedBy: 'Officer Brown',
+      verificationDate: '2024-03-19'
     }
-  ];
+  ]);
 
   const getStatusBadgeColor = (status) => {
     switch (status) {
@@ -64,8 +226,93 @@ function Documents() {
         return 'bg-green-100 text-green-800';
       case 'LEGAL_DOCUMENT':
         return 'bg-red-100 text-red-800';
+      case 'APPLICATION_FORM':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'IDENTITY_DOCUMENT':
+        return 'bg-indigo-100 text-indigo-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // Filter documents
+  const filteredDocuments = documents.filter((doc) => {
+    const matchesSearch =
+      doc.fileName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.uploader.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.uploader.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (doc.landParcel?.parcelNumber && doc.landParcel.parcelNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (doc.requestId && doc.requestId.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    const matchesType = typeFilter ? doc.documentType === typeFilter : true;
+    const matchesStatus = statusFilter ? doc.status === statusFilter : true;
+
+    return matchesSearch && matchesType && matchesStatus;
+  });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedDocuments = filteredDocuments.slice(startIndex, startIndex + itemsPerPage);
+
+  // Action handlers
+  const handleSaveDocument = (documentData) => {
+    if (selectedDocument) {
+      setDocuments((prev) =>
+        prev.map((d) => (d.id === selectedDocument.id ? { ...d, ...documentData } : d))
+      );
+    } else {
+      setDocuments((prev) => [
+        ...prev,
+        {
+          ...documentData,
+          id: prev.length + 1,
+          fileName: documentData.file ? documentData.file.name : documentData.documentName,
+          uploader: { firstName: currentUser.firstName, lastName: currentUser.lastName },
+          uploadDate: new Date().toISOString().split('T')[0],
+          status: 'PENDING',
+          fileSize: documentData.file ? (documentData.file.size / (1024 * 1024)).toFixed(1) + ' MB' : 'Unknown',
+        },
+      ]);
+    }
+    setIsModalOpen(false);
+  };
+
+  const handleVerifyDocument = (docId) => {
+    setDocuments((prev) =>
+      prev.map((doc) =>
+        doc.id === docId
+          ? {
+              ...doc,
+              status: 'VERIFIED',
+              verifiedBy: currentUser.firstName + ' ' + currentUser.lastName,
+              verificationDate: new Date().toISOString().split('T')[0],
+            }
+          : doc
+      )
+    );
+  };
+
+  const handleRejectDocument = (docId) => {
+    const reason = prompt('Please provide a reason for rejection:');
+    if (reason) {
+      setDocuments((prev) =>
+        prev.map((doc) =>
+          doc.id === docId
+            ? {
+                ...doc,
+                status: 'REJECTED',
+                rejectionReason: reason,
+              }
+            : doc
+        )
+      );
+    }
+  };
+
+  const handleDeleteDocument = (docId) => {
+    if (window.confirm('Are you sure you want to delete this document?')) {
+      setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
     }
   };
 
@@ -83,6 +330,10 @@ function Documents() {
           <button
             type="button"
             className="btn btn-primary"
+            onClick={() => {
+              setSelectedDocument(null);
+              setIsModalOpen(true);
+            }}
           >
             <PlusIcon className="h-5 w-5 mr-2" />
             Upload Document
@@ -117,6 +368,20 @@ function Documents() {
             <option value="SURVEY_REPORT">Survey Report</option>
             <option value="OWNERSHIP_CERTIFICATE">Ownership Certificate</option>
             <option value="LEGAL_DOCUMENT">Legal Document</option>
+            <option value="APPLICATION_FORM">Application Form</option>
+            <option value="IDENTITY_DOCUMENT">Identity Document</option>
+            <option value="OTHER">Other</option>
+          </select>
+          <select
+            className="input"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="">All Status</option>
+            <option value="VERIFIED">Verified</option>
+            <option value="PENDING">Pending</option>
+            <option value="REJECTED">Rejected</option>
+            <option value="ACTIVE">Active</option>
           </select>
         </div>
       </div>
@@ -153,7 +418,7 @@ function Documents() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {mockDocuments.map((document) => (
+                  {paginatedDocuments.map((document) => (
                     <tr key={document.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
@@ -193,12 +458,53 @@ function Documents() {
                         {new Date(document.uploadDate).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button className="text-blue-600 hover:text-blue-900 mr-4">
-                          <EyeIcon className="h-4 w-4 inline" />
-                        </button>
-                        <button className="text-green-600 hover:text-green-900">
-                          <ArrowDownTrayIcon className="h-4 w-4 inline" />
-                        </button>
+                        <div className="flex justify-end space-x-2">
+                          <button className="text-blue-600 hover:text-blue-900" title="View">
+                            <EyeIcon className="h-4 w-4 inline" />
+                          </button>
+                          <button className="text-green-600 hover:text-green-900" title="Download">
+                            <ArrowDownTrayIcon className="h-4 w-4 inline" />
+                          </button>
+                          {canManageDocuments && (
+                            <>
+                              <button
+                                onClick={() => {
+                                  setSelectedDocument(document);
+                                  setIsModalOpen(true);
+                                }}
+                                className="text-indigo-600 hover:text-indigo-900"
+                                title="Edit"
+                              >
+                                <PencilIcon className="h-4 w-4 inline" />
+                              </button>
+                              {document.status === 'PENDING' && (
+                                <>
+                                  <button
+                                    onClick={() => handleVerifyDocument(document.id)}
+                                    className="text-green-600 hover:text-green-900"
+                                    title="Verify"
+                                  >
+                                    <CheckIcon className="h-4 w-4 inline" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleRejectDocument(document.id)}
+                                    className="text-red-600 hover:text-red-900"
+                                    title="Reject"
+                                  >
+                                    <XMarkIcon className="h-4 w-4 inline" />
+                                  </button>
+                                </>
+                              )}
+                              <button
+                                onClick={() => handleDeleteDocument(document.id)}
+                                className="text-red-600 hover:text-red-900"
+                                title="Delete"
+                              >
+                                <TrashIcon className="h-4 w-4 inline" />
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -208,6 +514,42 @@ function Documents() {
           </div>
         </div>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-between items-center mt-6">
+          <div className="text-sm text-gray-700">
+            Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredDocuments.length)} of{' '}
+            {filteredDocuments.length} documents
+          </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="btn btn-outline disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <span className="px-3 py-2 text-sm">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="btn btn-outline disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+
+      <DocumentModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        document={selectedDocument}
+        onSave={handleSaveDocument}
+      />
     </div>
   );
 }

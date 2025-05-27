@@ -1,253 +1,513 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import toast from 'react-hot-toast';
-import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { useNavigate } from 'react-router-dom';
+import {
+  EyeIcon,
+  EyeSlashIcon,
+  LockClosedIcon,
+  UserIcon,
+  ShieldCheckIcon,
+  KeyIcon
+} from '@heroicons/react/24/outline';
 
-function Login() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showOTP, setShowOTP] = useState(false);
-  const [otpCode, setOtpCode] = useState('');
+const Login = () => {
   const navigate = useNavigate();
+  const [step, setStep] = useState('login'); // 'login', '2fa', 'forgot-password', 'reset-password'
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    getValues,
-  } = useForm();
+  const [loginData, setLoginData] = useState({
+    email: '',
+    password: '',
+  });
 
-  // Mock login function (replace with actual API call)
-  const handleLogin = async (data) => {
-    setIsLoading(true);
+  const [twoFactorData, setTwoFactorData] = useState({
+    code: '',
+  });
+
+  const [forgotPasswordData, setForgotPasswordData] = useState({
+    email: '',
+  });
+
+  const [resetPasswordData, setResetPasswordData] = useState({
+    token: '',
+    password: '',
+    confirmPassword: '',
+  });
+
+  // Mock users for demo
+  const mockUsers = [
+    {
+      id: 1,
+      email: 'admin@landmanagement.rw',
+      password: 'admin123',
+      role: 'ADMIN',
+      firstName: 'Admin',
+      lastName: 'User',
+      twoFactorEnabled: true
+    },
+    {
+      id: 2,
+      email: 'officer@landmanagement.rw',
+      password: 'officer123',
+      role: 'LAND_OFFICER',
+      firstName: 'Land',
+      lastName: 'Officer',
+      twoFactorEnabled: false
+    },
+    {
+      id: 3,
+      email: 'citizen@landmanagement.rw',
+      password: 'citizen123',
+      role: 'CITIZEN',
+      firstName: 'John',
+      lastName: 'Citizen',
+      twoFactorEnabled: false
+    },
+  ];
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock successful login
-      const mockUser = {
-        id: 1,
-        firstName: 'John',
-        lastName: 'Doe',
-        email: data.email,
-        role: 'ADMIN'
-      };
-      
-      const mockToken = 'mock-jwt-token';
-      
-      localStorage.setItem('token', mockToken);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      
-      // Show 2FA prompt
-      setShowOTP(true);
-      toast.success('Login successful! Please enter the OTP sent to your email.');
-    } catch (error) {
-      toast.error('Login failed. Please check your credentials.');
+
+      const user = mockUsers.find(u => u.email === loginData.email && u.password === loginData.password);
+
+      if (!user) {
+        setError('Invalid email or password');
+        setLoading(false);
+        return;
+      }
+
+      if (user.twoFactorEnabled) {
+        setStep('2fa');
+        setLoading(false);
+        return;
+      }
+
+      // Login successful
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('isAuthenticated', 'true');
+      navigate('/dashboard');
+    } catch (err) {
+      setError('Login failed. Please try again.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleOTPVerification = async (e) => {
+  const handleTwoFactor = async (e) => {
     e.preventDefault();
-    if (otpCode.length !== 6) {
-      toast.error('Please enter a valid 6-digit OTP');
+    setLoading(true);
+    setError('');
+
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // For demo, accept any 6-digit code
+      if (twoFactorData.code.length === 6) {
+        const user = mockUsers.find(u => u.email === loginData.email);
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('isAuthenticated', 'true');
+        navigate('/dashboard');
+      } else {
+        setError('Invalid 2FA code');
+      }
+    } catch (err) {
+      setError('2FA verification failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      setSuccess('Password reset email sent! Check your inbox.');
+      setTimeout(() => {
+        setStep('reset-password');
+        setSuccess('');
+      }, 2000);
+    } catch (err) {
+      setError('Failed to send reset email. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    if (resetPasswordData.password !== resetPasswordData.confirmPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
       return;
     }
 
-    setIsLoading(true);
     try {
-      // Simulate OTP verification
+      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast.success('OTP verified successfully!');
-      navigate('/dashboard');
-    } catch (error) {
-      toast.error('Invalid OTP. Please try again.');
+
+      setSuccess('Password reset successful! You can now login.');
+      setTimeout(() => {
+        setStep('login');
+        setSuccess('');
+        setResetPasswordData({ token: '', password: '', confirmPassword: '' });
+      }, 2000);
+    } catch (err) {
+      setError('Password reset failed. Please try again.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const resendOTP = async () => {
-    try {
-      // Simulate resend OTP
-      await new Promise(resolve => setTimeout(resolve, 500));
-      toast.success('OTP resent to your email');
-    } catch (error) {
-      toast.error('Failed to resend OTP');
+  const testLogin = (userType) => {
+    const user = mockUsers.find(u => u.role === userType);
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('isAuthenticated', 'true');
+      navigate('/dashboard');
     }
   };
-
-  if (showOTP) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-          <div>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-              Two-Factor Authentication
-            </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
-              Enter the 6-digit code sent to your email
-            </p>
-          </div>
-          <form className="mt-8 space-y-6" onSubmit={handleOTPVerification}>
-            <div>
-              <label htmlFor="otp" className="sr-only">
-                OTP Code
-              </label>
-              <input
-                id="otp"
-                name="otp"
-                type="text"
-                maxLength="6"
-                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm text-center text-2xl tracking-widest"
-                placeholder="000000"
-                value={otpCode}
-                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-              />
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                disabled={isLoading || otpCode.length !== 6}
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? 'Verifying...' : 'Verify OTP'}
-              </button>
-            </div>
-
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={resendOTP}
-                className="text-primary-600 hover:text-primary-500 text-sm"
-              >
-                Resend OTP
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
+          <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-100">
+            <LockClosedIcon className="h-6 w-6 text-blue-600" />
+          </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Land Management System
+            {step === 'login' && 'Sign in to your account'}
+            {step === '2fa' && 'Two-Factor Authentication'}
+            {step === 'forgot-password' && 'Reset your password'}
+            {step === 'reset-password' && 'Set new password'}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Sign in to your account
+            {step === 'login' && 'Land Management System'}
+            {step === '2fa' && 'Enter the 6-digit code from your authenticator app'}
+            {step === 'forgot-password' && 'Enter your email to receive reset instructions'}
+            {step === 'reset-password' && 'Enter your new password'}
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(handleLogin)}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
-              </label>
-              <input
-                {...register('email', {
-                  required: 'Email is required',
-                  pattern: {
-                    value: /^\S+@\S+$/i,
-                    message: 'Invalid email address',
-                  },
-                })}
-                type="email"
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-              />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-              )}
+
+        {/* Error/Success Messages */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        )}
+
+        {success && (
+          <div className="bg-green-50 border border-green-200 rounded-md p-4">
+            <p className="text-sm text-green-600">{success}</p>
+          </div>
+        )}
+
+        {/* Login Form */}
+        {step === 'login' && (
+          <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  Email address
+                </label>
+                <div className="mt-1 relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <UserIcon className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    required
+                    className="input pl-10"
+                    placeholder="Enter your email"
+                    value={loginData.email}
+                    onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  Password
+                </label>
+                <div className="mt-1 relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <LockClosedIcon className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    className="input pl-10 pr-10"
+                    placeholder="Enter your password"
+                    value={loginData.password}
+                    onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                  />
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <button
+                      type="button"
+                      className="text-gray-400 hover:text-gray-500"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeSlashIcon className="h-5 w-5" />
+                      ) : (
+                        <EyeIcon className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="relative">
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
-                {...register('password', {
-                  required: 'Password is required',
-                  minLength: {
-                    value: 6,
-                    message: 'Password must be at least 6 characters',
-                  },
-                })}
-                type={showPassword ? 'text' : 'password'}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-              />
+
+            <div className="flex items-center justify-between">
               <button
                 type="button"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <EyeSlashIcon className="h-5 w-5 text-gray-400" />
-                ) : (
-                  <EyeIcon className="h-5 w-5 text-gray-400" />
-                )}
-              </button>
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                Remember me
-              </label>
-            </div>
-
-            <div className="text-sm">
-              <Link
-                to="/forgot-password"
-                className="font-medium text-primary-600 hover:text-primary-500"
+                className="text-sm text-blue-600 hover:text-blue-500"
+                onClick={() => setStep('forgot-password')}
               >
                 Forgot your password?
-              </Link>
+              </button>
             </div>
-          </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? 'Signing in...' : 'Sign in'}
-            </button>
-          </div>
-
-          <div className="text-center">
-            <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
-              <Link
-                to="/register"
-                className="font-medium text-primary-600 hover:text-primary-500"
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn btn-primary w-full"
               >
-                Sign up
-              </Link>
-            </p>
-          </div>
-        </form>
+                {loading ? 'Signing in...' : 'Sign in'}
+              </button>
+            </div>
+
+            {/* Test Login Buttons */}
+            <div className="mt-6 border-t border-gray-200 pt-6">
+              <p className="text-sm text-gray-600 text-center mb-4">Quick Test Login:</p>
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => testLogin('ADMIN')}
+                  className="w-full btn btn-outline text-sm"
+                >
+                  Login as Admin
+                </button>
+                <button
+                  type="button"
+                  onClick={() => testLogin('LAND_OFFICER')}
+                  className="w-full btn btn-outline text-sm"
+                >
+                  Login as Land Officer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => testLogin('CITIZEN')}
+                  className="w-full btn btn-outline text-sm"
+                >
+                  Login as Citizen
+                </button>
+              </div>
+            </div>
+          </form>
+        )}
+
+        {/* 2FA Form */}
+        {step === '2fa' && (
+          <form className="mt-8 space-y-6" onSubmit={handleTwoFactor}>
+            <div>
+              <label htmlFor="code" className="block text-sm font-medium text-gray-700">
+                Authentication Code
+              </label>
+              <div className="mt-1 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <ShieldCheckIcon className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="code"
+                  name="code"
+                  type="text"
+                  required
+                  maxLength="6"
+                  className="input pl-10 text-center text-lg tracking-widest"
+                  placeholder="000000"
+                  value={twoFactorData.code}
+                  onChange={(e) => setTwoFactorData({ ...twoFactorData, code: e.target.value.replace(/\D/g, '') })}
+                />
+              </div>
+              <p className="mt-2 text-sm text-gray-500">
+                For demo: enter any 6-digit code (e.g., 123456)
+              </p>
+            </div>
+
+            <div className="flex space-x-4">
+              <button
+                type="button"
+                onClick={() => setStep('login')}
+                className="flex-1 btn btn-outline"
+              >
+                Back
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 btn btn-primary"
+              >
+                {loading ? 'Verifying...' : 'Verify'}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* Forgot Password Form */}
+        {step === 'forgot-password' && (
+          <form className="mt-8 space-y-6" onSubmit={handleForgotPassword}>
+            <div>
+              <label htmlFor="reset-email" className="block text-sm font-medium text-gray-700">
+                Email address
+              </label>
+              <div className="mt-1 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <UserIcon className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="reset-email"
+                  name="email"
+                  type="email"
+                  required
+                  className="input pl-10"
+                  placeholder="Enter your email"
+                  value={forgotPasswordData.email}
+                  onChange={(e) => setForgotPasswordData({ ...forgotPasswordData, email: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="flex space-x-4">
+              <button
+                type="button"
+                onClick={() => setStep('login')}
+                className="flex-1 btn btn-outline"
+              >
+                Back to Login
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 btn btn-primary"
+              >
+                {loading ? 'Sending...' : 'Send Reset Email'}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* Reset Password Form */}
+        {step === 'reset-password' && (
+          <form className="mt-8 space-y-6" onSubmit={handleResetPassword}>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="token" className="block text-sm font-medium text-gray-700">
+                  Reset Token
+                </label>
+                <div className="mt-1 relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <KeyIcon className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="token"
+                    name="token"
+                    type="text"
+                    required
+                    className="input pl-10"
+                    placeholder="Enter reset token from email"
+                    value={resetPasswordData.token}
+                    onChange={(e) => setResetPasswordData({ ...resetPasswordData, token: e.target.value })}
+                  />
+                </div>
+                <p className="mt-1 text-sm text-gray-500">For demo: enter any token</p>
+              </div>
+
+              <div>
+                <label htmlFor="new-password" className="block text-sm font-medium text-gray-700">
+                  New Password
+                </label>
+                <div className="mt-1 relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <LockClosedIcon className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="new-password"
+                    name="password"
+                    type="password"
+                    required
+                    className="input pl-10"
+                    placeholder="Enter new password"
+                    value={resetPasswordData.password}
+                    onChange={(e) => setResetPasswordData({ ...resetPasswordData, password: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700">
+                  Confirm Password
+                </label>
+                <div className="mt-1 relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <LockClosedIcon className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="confirm-password"
+                    name="confirmPassword"
+                    type="password"
+                    required
+                    className="input pl-10"
+                    placeholder="Confirm new password"
+                    value={resetPasswordData.confirmPassword}
+                    onChange={(e) => setResetPasswordData({ ...resetPasswordData, confirmPassword: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex space-x-4">
+              <button
+                type="button"
+                onClick={() => setStep('login')}
+                className="flex-1 btn btn-outline"
+              >
+                Back to Login
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 btn btn-primary"
+              >
+                {loading ? 'Resetting...' : 'Reset Password'}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );
-}
+};
 
 export default Login;

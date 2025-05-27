@@ -1,5 +1,7 @@
 package rw.landManagementSystem.LandSystem.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import rw.landManagementSystem.LandSystem.model.User;
@@ -130,6 +132,19 @@ public class UserService {
 
     public boolean isPhoneNumberAvailable(String phoneNumber) {
         return !userRepository.existsByPhoneNumber(phoneNumber);
+    }
+
+    public boolean existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
+    public User save(User user) {
+        return userRepository.save(user);
+    }
+
+    // Paginated search with filters
+    public Page<User> getUsersWithFilters(String search, UserRole role, UserStatus status, Pageable pageable) {
+        return userRepository.findUsersWithFilters(search, role, status, pageable);
     }
 
     // Private helper methods

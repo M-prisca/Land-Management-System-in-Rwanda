@@ -112,9 +112,53 @@ const Users = () => {
       email: 'john.doe@example.com',
       phoneNumber: '+250 788 123 456',
       nationalId: '1234567890123456',
+      role: 'ADMIN',
+      status: 'ACTIVE',
+      dateCreated: '2024-01-15',
+    },
+    {
+      id: 2,
+      firstName: 'Jane',
+      lastName: 'Smith',
+      email: 'jane.smith@example.com',
+      phoneNumber: '+250 788 234 567',
+      nationalId: '1234567890123457',
+      role: 'LAND_OFFICER',
+      status: 'ACTIVE',
+      dateCreated: '2024-01-20',
+    },
+    {
+      id: 3,
+      firstName: 'Alice',
+      lastName: 'Johnson',
+      email: 'alice.johnson@example.com',
+      phoneNumber: '+250 788 345 678',
+      nationalId: '1234567890123458',
       role: 'CITIZEN',
       status: 'ACTIVE',
-      createdAt: '2024-01-15',
+      dateCreated: '2024-02-01',
+    },
+    {
+      id: 4,
+      firstName: 'Bob',
+      lastName: 'Wilson',
+      email: 'bob.wilson@example.com',
+      phoneNumber: '+250 788 456 789',
+      nationalId: '1234567890123459',
+      role: 'CITIZEN',
+      status: 'DEACTIVATED',
+      dateCreated: '2024-02-10',
+    },
+    {
+      id: 5,
+      firstName: 'Carol',
+      lastName: 'Davis',
+      email: 'carol.davis@example.com',
+      phoneNumber: '+250 788 567 890',
+      nationalId: '1234567890123460',
+      role: 'LAND_OFFICER',
+      status: 'ACTIVE',
+      dateCreated: '2024-02-15',
     },
   ]);
 
@@ -189,38 +233,73 @@ const Users = () => {
         <select className="input" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="">All Status</option>
           <option value="ACTIVE">Active</option>
-          <option value="INACTIVE">Inactive</option>
-          <option value="SUSPENDED">Suspended</option>
+          <option value="DEACTIVATED">Deactivated</option>
         </select>
       </div>
 
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">User</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Email</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Role</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Status</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Created</th>
-            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500">Actions</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Full Name</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Created</th>
+            {canManageUsers && (
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            )}
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {filteredUsers.map((user) => (
             <tr key={user.id} className="hover:bg-gray-50">
-              <td className="px-6 py-4 whitespace-nowrap">{user.firstName} {user.lastName}</td>
-              <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
-              <td className="px-6 py-4 whitespace-nowrap">{user.role}</td>
-              <td className="px-6 py-4 whitespace-nowrap">{user.status}</td>
-              <td className="px-6 py-4 whitespace-nowrap">{new Date(user.createdAt).toLocaleDateString()}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">
-                <button onClick={() => handleEditUser(user)} className="text-indigo-600 hover:text-indigo-900">
-                  <PencilIcon className="h-5 w-5 inline" />
-                </button>
-                <button onClick={() => handleDeleteUser(user.id)} className="text-red-600 hover:text-red-900">
-                  <TrashIcon className="h-5 w-5 inline" />
-                </button>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="text-sm font-medium text-gray-900">
+                  {user.firstName} {user.lastName}
+                </div>
               </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="text-sm text-gray-900">{user.email}</div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  user.role === 'ADMIN' ? 'bg-red-100 text-red-800' :
+                  user.role === 'LAND_OFFICER' ? 'bg-blue-100 text-blue-800' :
+                  'bg-green-100 text-green-800'
+                }`}>
+                  {user.role.replace('_', ' ')}
+                </span>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  user.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                }`}>
+                  {user.status}
+                </span>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {new Date(user.dateCreated).toLocaleDateString()}
+              </td>
+              {canManageUsers && (
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <div className="flex justify-end space-x-2">
+                    <button
+                      onClick={() => handleEditUser(user)}
+                      className="text-indigo-600 hover:text-indigo-900"
+                      title="Edit user profile"
+                    >
+                      <PencilIcon className="h-4 w-4 inline" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteUser(user.id)}
+                      className="text-red-600 hover:text-red-900"
+                      title="Change role or deactivate account"
+                    >
+                      <TrashIcon className="h-4 w-4 inline" />
+                    </button>
+                  </div>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

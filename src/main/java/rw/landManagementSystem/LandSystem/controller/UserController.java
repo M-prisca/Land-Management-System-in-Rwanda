@@ -1,7 +1,12 @@
 package rw.landManagementSystem.LandSystem.controller;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import rw.landManagementSystem.LandSystem.model.User;
 import rw.landManagementSystem.LandSystem.model.UserRole;
@@ -9,7 +14,9 @@ import rw.landManagementSystem.LandSystem.model.UserStatus;
 import rw.landManagementSystem.LandSystem.service.UserService;
 
 import jakarta.validation.Valid;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -25,6 +32,7 @@ public class UserController {
 
     // Create user
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
         try {
             User createdUser = userService.createUser(user);
@@ -41,6 +49,35 @@ public class UserController {
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
+    // Get users with pagination and filters
+    @GetMapping("/paginated")
+    public ResponseEntity<Map<String, Object>> getUsersPaginated(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) UserRole role,
+            @RequestParam(required = false) UserStatus status) {
+
+        Sort sort = sortDir.equalsIgnoreCase("desc") ?
+            Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<User> userPage = userService.getUsersWithFilters(search, role, status, pageable);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("users", userPage.getContent());
+        response.put("currentPage", userPage.getNumber());
+        response.put("totalItems", userPage.getTotalElements());
+        response.put("totalPages", userPage.getTotalPages());
+        response.put("pageSize", userPage.getSize());
+        response.put("hasNext", userPage.hasNext());
+        response.put("hasPrevious", userPage.hasPrevious());
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     // Get user by ID
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
@@ -54,6 +91,7 @@ public class UserController {
 
     // Update user
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('LAND_OFFICER') and @userService.getUserById(#id).role != T(rw.landManagementSystem.LandSystem.model.UserRole).ADMIN)")
     public ResponseEntity<User> updateUser(@PathVariable Long id, @Valid @RequestBody User userDetails) {
         try {
             User updatedUser = userService.updateUser(id, userDetails);
@@ -65,6 +103,7 @@ public class UserController {
 
     // Delete user
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         try {
             userService.deleteUser(id);

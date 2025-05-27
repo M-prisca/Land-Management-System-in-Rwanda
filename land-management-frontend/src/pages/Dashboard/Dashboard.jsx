@@ -80,35 +80,40 @@ function Dashboard() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = user.role || 'CITIZEN';
 
-  // Fetch dashboard data from API
+  // Fetch dashboard data from API (with fallback to mock data)
   const { data: usersStats } = useQuery({
     queryKey: ['users-stats'],
     queryFn: () => usersAPI.getStats(),
     select: (response) => response.data,
+    enabled: false, // Disable for now, use mock data
   });
 
   const { data: parcelsStats } = useQuery({
     queryKey: ['parcels-stats'],
     queryFn: () => landParcelsAPI.getStats(),
     select: (response) => response.data,
+    enabled: false, // Disable for now, use mock data
   });
 
   const { data: requestsStats } = useQuery({
     queryKey: ['requests-stats'],
     queryFn: () => requestsAPI.getStats(),
     select: (response) => response.data,
+    enabled: false, // Disable for now, use mock data
   });
 
   const { data: documentsStats } = useQuery({
     queryKey: ['documents-stats'],
     queryFn: () => documentsAPI.getStats(),
     select: (response) => response.data,
+    enabled: false, // Disable for now, use mock data
   });
 
   const { data: ownershipsStats } = useQuery({
     queryKey: ['ownerships-stats'],
     queryFn: () => ownershipsAPI.getStats(),
     select: (response) => response.data,
+    enabled: false, // Disable for now, use mock data
   });
 
   // Mock data for charts (replace with real API data)
@@ -155,7 +160,7 @@ function Dashboard() {
   const stats = [
     {
       name: 'Total Users',
-      value: usersStats?.total || 0,
+      value: usersStats?.total || mockStats.totalUsers,
       icon: UsersIcon,
       change: 12.5,
       changeType: 'increase',
@@ -163,7 +168,7 @@ function Dashboard() {
     },
     {
       name: 'Land Parcels',
-      value: parcelsStats?.total || 0,
+      value: parcelsStats?.total || mockStats.totalLandParcels,
       icon: MapIcon,
       change: 8.3,
       changeType: 'increase',
@@ -171,7 +176,7 @@ function Dashboard() {
     },
     {
       name: 'Active Ownerships',
-      value: ownershipsStats?.total || 0,
+      value: ownershipsStats?.total || mockStats.totalOwnerships,
       icon: BuildingOfficeIcon,
       change: 15.2,
       changeType: 'increase',
@@ -179,7 +184,7 @@ function Dashboard() {
     },
     {
       name: 'Pending Requests',
-      value: requestsStats?.pending || 0,
+      value: requestsStats?.pending || mockStats.pendingRequests,
       icon: ClipboardDocumentListIcon,
       change: -5.2,
       changeType: 'decrease',
@@ -187,7 +192,7 @@ function Dashboard() {
     },
     {
       name: 'Documents',
-      value: documentsStats?.total || 0,
+      value: documentsStats?.total || mockStats.totalDocuments,
       icon: DocumentTextIcon,
       change: 22.1,
       changeType: 'increase',
