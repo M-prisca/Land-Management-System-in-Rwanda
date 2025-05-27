@@ -644,6 +644,37 @@ const OfficerDashboard = () => {
 
   // Review Land Requests Section
   if (activeSection === 'requests') {
+    const [requestFilter, setRequestFilter] = useState('All Requests');
+    const [selectedRequest, setSelectedRequest] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+    const [modalType, setModalType] = useState('');
+    const [requests, setRequests] = useState([
+      { id: 'LR001', applicant: 'John Doe', type: 'Land Transfer', location: 'Kigali, Gasabo', priority: 'High', date: '2024-01-15', status: 'Pending', description: 'Request to transfer land ownership from John Doe to Mary Doe for residential purposes.' },
+      { id: 'LR002', applicant: 'Jane Smith', type: 'New Registration', location: 'Kigali, Nyarugenge', priority: 'Medium', date: '2024-01-14', status: 'Pending', description: 'New land registration for commercial development project.' },
+      { id: 'LR003', applicant: 'Mike Johnson', type: 'Ownership Change', location: 'Kigali, Kicukiro', priority: 'Low', date: '2024-01-13', status: 'Pending', description: 'Change of ownership due to inheritance.' }
+    ]);
+
+    const filteredRequests = requests.filter(request => {
+      if (requestFilter === 'All Requests') return true;
+      return request.priority === requestFilter.replace(' Priority', '');
+    });
+
+    const handleApprove = (request) => {
+      setRequests(prev => prev.map(r => r.id === request.id ? { ...r, status: 'Approved' } : r));
+      alert(`Request ${request.id} has been approved successfully!`);
+    };
+
+    const handleReject = (request) => {
+      setRequests(prev => prev.map(r => r.id === request.id ? { ...r, status: 'Rejected' } : r));
+      alert(`Request ${request.id} has been rejected.`);
+    };
+
+    const handleViewDetails = (request) => {
+      setSelectedRequest(request);
+      setModalType('details');
+      setShowModal(true);
+    };
+
     return (
       <div className="min-h-screen bg-gray-50">
         <header className="bg-white shadow">
@@ -670,7 +701,11 @@ const OfficerDashboard = () => {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold">Pending Land Requests</h2>
               <div className="flex space-x-2">
-                <select className="border border-gray-300 rounded-md px-3 py-2">
+                <select
+                  value={requestFilter}
+                  onChange={(e) => setRequestFilter(e.target.value)}
+                  className="border border-gray-300 rounded-md px-3 py-2 focus:ring-green-500 focus:border-green-500"
+                >
                   <option>All Requests</option>
                   <option>High Priority</option>
                   <option>Medium Priority</option>
@@ -689,44 +724,115 @@ const OfficerDashboard = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">LR001</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">John Doe</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Land Transfer</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Kigali, Gasabo</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">High</span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-01-15</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-green-600 hover:text-green-900 mr-3">Approve</button>
-                      <button className="text-red-600 hover:text-red-900 mr-3">Reject</button>
-                      <button className="text-blue-600 hover:text-blue-900">View Details</button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">LR002</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jane Smith</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">New Registration</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Kigali, Nyarugenge</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Medium</span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-01-14</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-green-600 hover:text-green-900 mr-3">Approve</button>
-                      <button className="text-red-600 hover:text-red-900 mr-3">Reject</button>
-                      <button className="text-blue-600 hover:text-blue-900">View Details</button>
-                    </td>
-                  </tr>
+                  {filteredRequests.map((request) => (
+                    <tr key={request.id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{request.id}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.applicant}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.type}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.location}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          request.priority === 'High' ? 'bg-red-100 text-red-800' :
+                          request.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-green-100 text-green-800'
+                        }`}>
+                          {request.priority}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.date}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          request.status === 'Approved' ? 'bg-green-100 text-green-800' :
+                          request.status === 'Rejected' ? 'bg-red-100 text-red-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {request.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        {request.status === 'Pending' && (
+                          <>
+                            <button
+                              onClick={() => handleApprove(request)}
+                              className="text-green-600 hover:text-green-900 mr-3"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => handleReject(request)}
+                              className="text-red-600 hover:text-red-900 mr-3"
+                            >
+                              Reject
+                            </button>
+                          </>
+                        )}
+                        <button
+                          onClick={() => handleViewDetails(request)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
           </div>
+
+          {/* Request Details Modal */}
+          {showModal && selectedRequest && (
+            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+              <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div className="mt-3">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Request Details</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Request ID</label>
+                      <p className="text-sm text-gray-900">{selectedRequest.id}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Applicant</label>
+                      <p className="text-sm text-gray-900">{selectedRequest.applicant}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Type</label>
+                      <p className="text-sm text-gray-900">{selectedRequest.type}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Location</label>
+                      <p className="text-sm text-gray-900">{selectedRequest.location}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Priority</label>
+                      <p className="text-sm text-gray-900">{selectedRequest.priority}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Description</label>
+                      <p className="text-sm text-gray-900">{selectedRequest.description}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Status</label>
+                      <p className="text-sm text-gray-900">{selectedRequest.status}</p>
+                    </div>
+                  </div>
+                  <div className="flex justify-end space-x-3 mt-6">
+                    <button
+                      onClick={() => setShowModal(false)}
+                      className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     );
@@ -734,6 +840,36 @@ const OfficerDashboard = () => {
 
   // Verify Documents Section
   if (activeSection === 'documents') {
+    const [documentFilter, setDocumentFilter] = useState('All Documents');
+    const [selectedDocument, setSelectedDocument] = useState(null);
+    const [showDocModal, setShowDocModal] = useState(false);
+    const [documents, setDocuments] = useState([
+      { id: 'DOC001', type: 'Land Title', uploader: 'John Doe', date: '2024-01-15', status: 'Pending', description: 'Original land title document for Property LP001', fileUrl: '#' },
+      { id: 'DOC002', type: 'Transfer Deed', uploader: 'Jane Smith', date: '2024-01-14', status: 'Under Review', description: 'Transfer deed for commercial property', fileUrl: '#' },
+      { id: 'DOC003', type: 'Survey Report', uploader: 'Mike Johnson', date: '2024-01-13', status: 'Pending', description: 'Professional survey report with measurements', fileUrl: '#' },
+      { id: 'DOC004', type: 'Land Title', uploader: 'Sarah Wilson', date: '2024-01-12', status: 'Pending', description: 'Land title for residential property', fileUrl: '#' }
+    ]);
+
+    const filteredDocuments = documents.filter(doc => {
+      if (documentFilter === 'All Documents') return true;
+      return doc.type === documentFilter.replace('s', '');
+    });
+
+    const handleView = (document) => {
+      setSelectedDocument(document);
+      setShowDocModal(true);
+    };
+
+    const handleVerify = (document) => {
+      setDocuments(prev => prev.map(d => d.id === document.id ? { ...d, status: 'Verified' } : d));
+      alert(`Document ${document.id} has been verified successfully!`);
+    };
+
+    const handleReject = (document) => {
+      setDocuments(prev => prev.map(d => d.id === document.id ? { ...d, status: 'Rejected' } : d));
+      alert(`Document ${document.id} has been rejected.`);
+    };
+
     return (
       <div className="min-h-screen bg-gray-50">
         <header className="bg-white shadow">
@@ -760,7 +896,11 @@ const OfficerDashboard = () => {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold">Documents Pending Verification</h2>
               <div className="flex space-x-2">
-                <select className="border border-gray-300 rounded-md px-3 py-2">
+                <select
+                  value={documentFilter}
+                  onChange={(e) => setDocumentFilter(e.target.value)}
+                  className="border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                >
                   <option>All Documents</option>
                   <option>Land Titles</option>
                   <option>Transfer Deeds</option>
@@ -782,38 +922,131 @@ const OfficerDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">DOC001</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Land Title</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">John Doe</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-01-15</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-blue-600 hover:text-blue-900 mr-3">View</button>
-                      <button className="text-green-600 hover:text-green-900 mr-3">Verify</button>
-                      <button className="text-red-600 hover:text-red-900">Reject</button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">DOC002</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Transfer Deed</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jane Smith</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-01-14</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Under Review</span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-blue-600 hover:text-blue-900 mr-3">View</button>
-                      <button className="text-green-600 hover:text-green-900 mr-3">Verify</button>
-                      <button className="text-red-600 hover:text-red-900">Reject</button>
-                    </td>
-                  </tr>
+                  {filteredDocuments.map((document) => (
+                    <tr key={document.id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{document.id}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{document.type}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{document.uploader}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{document.date}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          document.status === 'Verified' ? 'bg-green-100 text-green-800' :
+                          document.status === 'Rejected' ? 'bg-red-100 text-red-800' :
+                          document.status === 'Under Review' ? 'bg-blue-100 text-blue-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {document.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button
+                          onClick={() => handleView(document)}
+                          className="text-blue-600 hover:text-blue-900 mr-3"
+                        >
+                          View
+                        </button>
+                        {(document.status === 'Pending' || document.status === 'Under Review') && (
+                          <>
+                            <button
+                              onClick={() => handleVerify(document)}
+                              className="text-green-600 hover:text-green-900 mr-3"
+                            >
+                              Verify
+                            </button>
+                            <button
+                              onClick={() => handleReject(document)}
+                              className="text-red-600 hover:text-red-900"
+                            >
+                              Reject
+                            </button>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
           </div>
+
+          {/* Document View Modal */}
+          {showDocModal && selectedDocument && (
+            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+              <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div className="mt-3">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Document Details</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Document ID</label>
+                      <p className="text-sm text-gray-900">{selectedDocument.id}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Type</label>
+                      <p className="text-sm text-gray-900">{selectedDocument.type}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Uploader</label>
+                      <p className="text-sm text-gray-900">{selectedDocument.uploader}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Upload Date</label>
+                      <p className="text-sm text-gray-900">{selectedDocument.date}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Description</label>
+                      <p className="text-sm text-gray-900">{selectedDocument.description}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Status</label>
+                      <p className="text-sm text-gray-900">{selectedDocument.status}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Document Preview</label>
+                      <div className="mt-2 p-4 border-2 border-dashed border-gray-300 rounded-md text-center">
+                        <div className="text-gray-400">
+                          <svg className="mx-auto h-12 w-12" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </div>
+                        <p className="text-sm text-gray-500">Document preview would appear here</p>
+                        <button className="mt-2 text-blue-600 hover:text-blue-800 text-sm">Download Document</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex justify-end space-x-3 mt-6">
+                    <button
+                      onClick={() => setShowDocModal(false)}
+                      className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                    >
+                      Close
+                    </button>
+                    {(selectedDocument.status === 'Pending' || selectedDocument.status === 'Under Review') && (
+                      <>
+                        <button
+                          onClick={() => {
+                            handleVerify(selectedDocument);
+                            setShowDocModal(false);
+                          }}
+                          className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                        >
+                          Verify
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleReject(selectedDocument);
+                            setShowDocModal(false);
+                          }}
+                          className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+                        >
+                          Reject
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     );
@@ -821,6 +1054,45 @@ const OfficerDashboard = () => {
 
   // Update Land Records Section
   if (activeSection === 'records') {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedRecord, setSelectedRecord] = useState(null);
+    const [showRecordModal, setShowRecordModal] = useState(false);
+    const [modalType, setModalType] = useState('');
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [landRecords, setLandRecords] = useState([
+      { id: 'LP001', location: 'Kigali, Gasabo', owner: 'John Doe', area: '1,200', lastUpdated: '2024-01-10', status: 'Active', landUse: 'Residential', value: 'RWF 25M' },
+      { id: 'LP002', location: 'Kigali, Nyarugenge', owner: 'Jane Smith', area: '800', lastUpdated: '2024-01-08', status: 'Active', landUse: 'Commercial', value: 'RWF 18M' },
+      { id: 'LP003', location: 'Kigali, Kicukiro', owner: 'Mike Johnson', area: '1,500', lastUpdated: '2024-01-05', status: 'Pending Transfer', landUse: 'Agricultural', value: 'RWF 32M' }
+    ]);
+
+    const filteredRecords = landRecords.filter(record =>
+      record.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.owner.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.location.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const handleEdit = (record) => {
+      setSelectedRecord(record);
+      setModalType('edit');
+      setShowRecordModal(true);
+    };
+
+    const handleViewHistory = (record) => {
+      setSelectedRecord(record);
+      setModalType('history');
+      setShowRecordModal(true);
+    };
+
+    const handleUpdateStatus = (record) => {
+      setSelectedRecord(record);
+      setModalType('status');
+      setShowRecordModal(true);
+    };
+
+    const handleAddNew = () => {
+      setShowAddModal(true);
+    };
+
     return (
       <div className="min-h-screen bg-gray-50">
         <header className="bg-white shadow">
@@ -846,7 +1118,10 @@ const OfficerDashboard = () => {
           <div className="bg-white shadow rounded-lg p-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold">Land Records Management</h2>
-              <button className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700">
+              <button
+                onClick={handleAddNew}
+                className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
+              >
                 Add New Record
               </button>
             </div>
@@ -855,6 +1130,8 @@ const OfficerDashboard = () => {
               <input
                 type="text"
                 placeholder="Search by Parcel ID, Owner, or Location..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
               />
             </div>
@@ -867,39 +1144,204 @@ const OfficerDashboard = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Area (m²)</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">LP001</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Kigali, Gasabo</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">John Doe</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1,200</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-01-10</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-purple-600 hover:text-purple-900 mr-3">Edit</button>
-                      <button className="text-blue-600 hover:text-blue-900 mr-3">View History</button>
-                      <button className="text-green-600 hover:text-green-900">Update Status</button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">LP002</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Kigali, Nyarugenge</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jane Smith</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">800</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-01-08</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-purple-600 hover:text-purple-900 mr-3">Edit</button>
-                      <button className="text-blue-600 hover:text-blue-900 mr-3">View History</button>
-                      <button className="text-green-600 hover:text-green-900">Update Status</button>
-                    </td>
-                  </tr>
+                  {filteredRecords.map((record) => (
+                    <tr key={record.id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{record.id}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.location}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.owner}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.area}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          record.status === 'Active' ? 'bg-green-100 text-green-800' :
+                          record.status === 'Pending Transfer' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {record.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.lastUpdated}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button
+                          onClick={() => handleEdit(record)}
+                          className="text-purple-600 hover:text-purple-900 mr-3"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleViewHistory(record)}
+                          className="text-blue-600 hover:text-blue-900 mr-3"
+                        >
+                          View History
+                        </button>
+                        <button
+                          onClick={() => handleUpdateStatus(record)}
+                          className="text-green-600 hover:text-green-900"
+                        >
+                          Update Status
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
           </div>
+
+          {/* Record Modal */}
+          {showRecordModal && selectedRecord && (
+            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+              <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div className="mt-3">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    {modalType === 'edit' ? 'Edit Land Record' :
+                     modalType === 'history' ? 'Record History' : 'Update Status'}
+                  </h3>
+
+                  {modalType === 'edit' && (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Parcel ID</label>
+                        <input type="text" defaultValue={selectedRecord.id} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Location</label>
+                        <input type="text" defaultValue={selectedRecord.location} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Owner</label>
+                        <input type="text" defaultValue={selectedRecord.owner} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Area (m²)</label>
+                        <input type="text" defaultValue={selectedRecord.area} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                      </div>
+                    </div>
+                  )}
+
+                  {modalType === 'history' && (
+                    <div className="space-y-3">
+                      <div className="border-l-4 border-blue-500 pl-4">
+                        <p className="text-sm font-medium">2024-01-10</p>
+                        <p className="text-sm text-gray-600">Record created by Land Officer</p>
+                      </div>
+                      <div className="border-l-4 border-green-500 pl-4">
+                        <p className="text-sm font-medium">2024-01-08</p>
+                        <p className="text-sm text-gray-600">Ownership verified and approved</p>
+                      </div>
+                      <div className="border-l-4 border-yellow-500 pl-4">
+                        <p className="text-sm font-medium">2024-01-05</p>
+                        <p className="text-sm text-gray-600">Initial documentation submitted</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {modalType === 'status' && (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Current Status</label>
+                        <p className="text-sm text-gray-900">{selectedRecord.status}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">New Status</label>
+                        <select className="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                          <option>Active</option>
+                          <option>Pending Transfer</option>
+                          <option>Under Review</option>
+                          <option>Disputed</option>
+                          <option>Inactive</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Reason for Change</label>
+                        <textarea rows="3" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="Enter reason for status change..."></textarea>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex justify-end space-x-3 mt-6">
+                    <button
+                      onClick={() => setShowRecordModal(false)}
+                      className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                    >
+                      Cancel
+                    </button>
+                    {modalType !== 'history' && (
+                      <button
+                        onClick={() => {
+                          alert(`${modalType === 'edit' ? 'Record updated' : 'Status updated'} successfully!`);
+                          setShowRecordModal(false);
+                        }}
+                        className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
+                      >
+                        {modalType === 'edit' ? 'Save Changes' : 'Update Status'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Add New Record Modal */}
+          {showAddModal && (
+            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+              <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div className="mt-3">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Add New Land Record</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Parcel ID</label>
+                      <input type="text" placeholder="LP004" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Location</label>
+                      <input type="text" placeholder="Kigali, District" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Owner</label>
+                      <input type="text" placeholder="Owner Name" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Area (m²)</label>
+                      <input type="number" placeholder="1000" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Land Use</label>
+                      <select className="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                        <option>Residential</option>
+                        <option>Commercial</option>
+                        <option>Agricultural</option>
+                        <option>Industrial</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex justify-end space-x-3 mt-6">
+                    <button
+                      onClick={() => setShowAddModal(false)}
+                      className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        alert('New land record added successfully!');
+                        setShowAddModal(false);
+                      }}
+                      className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
+                    >
+                      Add Record
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     );
@@ -907,6 +1349,95 @@ const OfficerDashboard = () => {
 
   // Generate Reports Section
   if (activeSection === 'reports') {
+    const [customReportType, setCustomReportType] = useState('Activity Report');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [reportFormat, setReportFormat] = useState('PDF');
+    const [isGenerating, setIsGenerating] = useState(false);
+
+    const generateQuickReport = async (reportType) => {
+      setIsGenerating(true);
+
+      // Simulate report generation
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Mock report data based on type
+      let reportData = {};
+      switch(reportType) {
+        case 'Monthly Activity Report':
+          reportData = {
+            title: 'Monthly Activity Report',
+            period: 'January 2024',
+            totalRequests: 45,
+            approvedRequests: 32,
+            rejectedRequests: 8,
+            pendingRequests: 5,
+            documentsVerified: 67,
+            newRegistrations: 12
+          };
+          break;
+        case 'Pending Requests Summary':
+          reportData = {
+            title: 'Pending Requests Summary',
+            totalPending: 23,
+            highPriority: 8,
+            mediumPriority: 10,
+            lowPriority: 5,
+            averageWaitTime: '3.2 days'
+          };
+          break;
+        case 'Land Parcel Status Report':
+          reportData = {
+            title: 'Land Parcel Status Report',
+            totalParcels: 3428,
+            activeParcels: 1890,
+            availableParcels: 1250,
+            underReview: 234,
+            disputed: 54
+          };
+          break;
+        case 'Document Verification Report':
+          reportData = {
+            title: 'Document Verification Report',
+            totalDocuments: 191,
+            verified: 145,
+            pending: 23,
+            rejected: 8,
+            underReview: 15
+          };
+          break;
+      }
+
+      setIsGenerating(false);
+
+      // Show report preview
+      alert(`${reportType} Generated Successfully!\n\nReport Summary:\n${JSON.stringify(reportData, null, 2)}\n\nReport would be downloaded as PDF.`);
+    };
+
+    const generateCustomReport = async () => {
+      if (!startDate || !endDate) {
+        alert('Please select both start and end dates.');
+        return;
+      }
+
+      setIsGenerating(true);
+
+      // Simulate custom report generation
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      const customReportData = {
+        type: customReportType,
+        dateRange: `${startDate} to ${endDate}`,
+        format: reportFormat,
+        generatedAt: new Date().toISOString(),
+        data: 'Custom report data would be generated based on selected criteria'
+      };
+
+      setIsGenerating(false);
+
+      alert(`Custom ${customReportType} Generated Successfully!\n\nReport Details:\n${JSON.stringify(customReportData, null, 2)}\n\nReport would be downloaded as ${reportFormat}.`);
+    };
+
     return (
       <div className="min-h-screen bg-gray-50">
         <header className="bg-white shadow">
@@ -933,19 +1464,44 @@ const OfficerDashboard = () => {
             <div className="bg-white shadow rounded-lg p-6">
               <h2 className="text-xl font-semibold mb-4">Quick Reports</h2>
               <div className="space-y-4">
-                <button className="w-full bg-orange-600 text-white px-4 py-3 rounded-md hover:bg-orange-700 text-left">
+                <button
+                  onClick={() => generateQuickReport('Monthly Activity Report')}
+                  disabled={isGenerating}
+                  className="w-full bg-orange-600 text-white px-4 py-3 rounded-md hover:bg-orange-700 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   📊 Monthly Activity Report
                 </button>
-                <button className="w-full bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700 text-left">
+                <button
+                  onClick={() => generateQuickReport('Pending Requests Summary')}
+                  disabled={isGenerating}
+                  className="w-full bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   📋 Pending Requests Summary
                 </button>
-                <button className="w-full bg-green-600 text-white px-4 py-3 rounded-md hover:bg-green-700 text-left">
+                <button
+                  onClick={() => generateQuickReport('Land Parcel Status Report')}
+                  disabled={isGenerating}
+                  className="w-full bg-green-600 text-white px-4 py-3 rounded-md hover:bg-green-700 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   🏞️ Land Parcel Status Report
                 </button>
-                <button className="w-full bg-purple-600 text-white px-4 py-3 rounded-md hover:bg-purple-700 text-left">
+                <button
+                  onClick={() => generateQuickReport('Document Verification Report')}
+                  disabled={isGenerating}
+                  className="w-full bg-purple-600 text-white px-4 py-3 rounded-md hover:bg-purple-700 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   📄 Document Verification Report
                 </button>
               </div>
+
+              {isGenerating && (
+                <div className="mt-4 p-4 bg-blue-50 rounded-md">
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                    <span className="text-sm text-blue-600">Generating report...</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="bg-white shadow rounded-lg p-6">
@@ -953,7 +1509,11 @@ const OfficerDashboard = () => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Report Type</label>
-                  <select className="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                  <select
+                    value={customReportType}
+                    onChange={(e) => setCustomReportType(e.target.value)}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                  >
                     <option>Activity Report</option>
                     <option>Performance Report</option>
                     <option>Status Summary</option>
@@ -963,22 +1523,89 @@ const OfficerDashboard = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Date Range</label>
                   <div className="grid grid-cols-2 gap-2">
-                    <input type="date" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                    <input type="date" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                    />
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                    />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Format</label>
-                  <select className="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                  <select
+                    value={reportFormat}
+                    onChange={(e) => setReportFormat(e.target.value)}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                  >
                     <option>PDF</option>
                     <option>Excel</option>
                     <option>CSV</option>
                   </select>
                 </div>
-                <button className="w-full bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700">
-                  Generate Report
+                <button
+                  onClick={generateCustomReport}
+                  disabled={isGenerating}
+                  className="w-full bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isGenerating ? 'Generating...' : 'Generate Report'}
                 </button>
               </div>
+
+              <div className="mt-6 p-4 bg-gray-50 rounded-md">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Report Preview</h3>
+                <div className="text-sm text-gray-600">
+                  <p><strong>Type:</strong> {customReportType}</p>
+                  <p><strong>Date Range:</strong> {startDate && endDate ? `${startDate} to ${endDate}` : 'Not selected'}</p>
+                  <p><strong>Format:</strong> {reportFormat}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Reports */}
+          <div className="mt-6 bg-white shadow rounded-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">Recent Reports</h2>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Report Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Generated Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Format</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Monthly Activity Report - Jan 2024</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Activity Report</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-01-15</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">PDF</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button className="text-blue-600 hover:text-blue-900 mr-3">Download</button>
+                      <button className="text-green-600 hover:text-green-900">View</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Land Parcel Status Report</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Status Summary</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-01-12</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Excel</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button className="text-blue-600 hover:text-blue-900 mr-3">Download</button>
+                      <button className="text-green-600 hover:text-green-900">View</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </main>
