@@ -563,6 +563,46 @@ const OfficerDashboard = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const [activeSection, setActiveSection] = useState('dashboard');
 
+  // All state variables for different sections
+  const [requestFilter, setRequestFilter] = useState('All Requests');
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [modalType, setModalType] = useState('');
+  const [requests, setRequests] = useState([
+    { id: 'LR001', applicant: 'John Doe', type: 'Land Transfer', location: 'Kigali, Gasabo', priority: 'High', date: '2024-01-15', status: 'Pending', description: 'Request to transfer land ownership from John Doe to Mary Doe for residential purposes.' },
+    { id: 'LR002', applicant: 'Jane Smith', type: 'New Registration', location: 'Kigali, Nyarugenge', priority: 'Medium', date: '2024-01-14', status: 'Pending', description: 'New land registration for commercial development project.' },
+    { id: 'LR003', applicant: 'Mike Johnson', type: 'Ownership Change', location: 'Kigali, Kicukiro', priority: 'Low', date: '2024-01-13', status: 'Pending', description: 'Change of ownership due to inheritance.' }
+  ]);
+
+  // Document verification state
+  const [documentFilter, setDocumentFilter] = useState('All Documents');
+  const [selectedDocument, setSelectedDocument] = useState(null);
+  const [showDocModal, setShowDocModal] = useState(false);
+  const [documents, setDocuments] = useState([
+    { id: 'DOC001', type: 'Land Title', uploader: 'John Doe', date: '2024-01-15', status: 'Pending', description: 'Original land title document for Property LP001', fileUrl: '#' },
+    { id: 'DOC002', type: 'Transfer Deed', uploader: 'Jane Smith', date: '2024-01-14', status: 'Under Review', description: 'Transfer deed for commercial property', fileUrl: '#' },
+    { id: 'DOC003', type: 'Survey Report', uploader: 'Mike Johnson', date: '2024-01-13', status: 'Pending', description: 'Professional survey report with measurements', fileUrl: '#' },
+    { id: 'DOC004', type: 'Land Title', uploader: 'Sarah Wilson', date: '2024-01-12', status: 'Pending', description: 'Land title for residential property', fileUrl: '#' }
+  ]);
+
+  // Land records state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedRecord, setSelectedRecord] = useState(null);
+  const [showRecordModal, setShowRecordModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [landRecords, setLandRecords] = useState([
+    { id: 'LP001', location: 'Kigali, Gasabo', owner: 'John Doe', area: '1,200', lastUpdated: '2024-01-10', status: 'Active', landUse: 'Residential', value: 'RWF 25M' },
+    { id: 'LP002', location: 'Kigali, Nyarugenge', owner: 'Jane Smith', area: '800', lastUpdated: '2024-01-08', status: 'Active', landUse: 'Commercial', value: 'RWF 18M' },
+    { id: 'LP003', location: 'Kigali, Kicukiro', owner: 'Mike Johnson', area: '1,500', lastUpdated: '2024-01-05', status: 'Pending Transfer', landUse: 'Agricultural', value: 'RWF 32M' }
+  ]);
+
+  // Reports state
+  const [customReportType, setCustomReportType] = useState('Activity Report');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [reportFormat, setReportFormat] = useState('PDF');
+  const [isGenerating, setIsGenerating] = useState(false);
+
   const handleLogout = () => {
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('user');
@@ -642,38 +682,164 @@ const OfficerDashboard = () => {
     },
   };
 
+  // Helper functions for requests
+  const filteredRequests = requests.filter(request => {
+    if (requestFilter === 'All Requests') return true;
+    return request.priority === requestFilter.replace(' Priority', '');
+  });
+
+  const handleApprove = (request) => {
+    setRequests(prev => prev.map(r => r.id === request.id ? { ...r, status: 'Approved' } : r));
+    alert(`Request ${request.id} has been approved successfully!`);
+  };
+
+  const handleReject = (request) => {
+    setRequests(prev => prev.map(r => r.id === request.id ? { ...r, status: 'Rejected' } : r));
+    alert(`Request ${request.id} has been rejected.`);
+  };
+
+  const handleViewDetails = (request) => {
+    setSelectedRequest(request);
+    setModalType('details');
+    setShowModal(true);
+  };
+
+  // Helper functions for documents
+  const filteredDocuments = documents.filter(doc => {
+    if (documentFilter === 'All Documents') return true;
+    return doc.type === documentFilter.replace('s', '');
+  });
+
+  const handleViewDoc = (document) => {
+    setSelectedDocument(document);
+    setShowDocModal(true);
+  };
+
+  const handleVerify = (document) => {
+    setDocuments(prev => prev.map(d => d.id === document.id ? { ...d, status: 'Verified' } : d));
+    alert(`Document ${document.id} has been verified successfully!`);
+  };
+
+  const handleRejectDoc = (document) => {
+    setDocuments(prev => prev.map(d => d.id === document.id ? { ...d, status: 'Rejected' } : d));
+    alert(`Document ${document.id} has been rejected.`);
+  };
+
+  // Helper functions for land records
+  const filteredRecords = landRecords.filter(record =>
+    record.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    record.owner.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    record.location.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleEdit = (record) => {
+    setSelectedRecord(record);
+    setModalType('edit');
+    setShowRecordModal(true);
+  };
+
+  const handleViewHistory = (record) => {
+    setSelectedRecord(record);
+    setModalType('history');
+    setShowRecordModal(true);
+  };
+
+  const handleUpdateStatus = (record) => {
+    setSelectedRecord(record);
+    setModalType('status');
+    setShowRecordModal(true);
+  };
+
+  const handleAddNew = () => {
+    setShowAddModal(true);
+  };
+
+  // Helper functions for reports
+  const generateQuickReport = async (reportType) => {
+    setIsGenerating(true);
+
+    // Simulate report generation
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Mock report data based on type
+    let reportData = {};
+    switch(reportType) {
+      case 'Monthly Activity Report':
+        reportData = {
+          title: 'Monthly Activity Report',
+          period: 'January 2024',
+          totalRequests: 45,
+          approvedRequests: 32,
+          rejectedRequests: 8,
+          pendingRequests: 5,
+          documentsVerified: 67,
+          newRegistrations: 12
+        };
+        break;
+      case 'Pending Requests Summary':
+        reportData = {
+          title: 'Pending Requests Summary',
+          totalPending: 23,
+          highPriority: 8,
+          mediumPriority: 10,
+          lowPriority: 5,
+          averageWaitTime: '3.2 days'
+        };
+        break;
+      case 'Land Parcel Status Report':
+        reportData = {
+          title: 'Land Parcel Status Report',
+          totalParcels: 3428,
+          activeParcels: 1890,
+          availableParcels: 1250,
+          underReview: 234,
+          disputed: 54
+        };
+        break;
+      case 'Document Verification Report':
+        reportData = {
+          title: 'Document Verification Report',
+          totalDocuments: 191,
+          verified: 145,
+          pending: 23,
+          rejected: 8,
+          underReview: 15
+        };
+        break;
+    }
+
+    setIsGenerating(false);
+
+    // Show report preview
+    alert(`${reportType} Generated Successfully!\n\nReport Summary:\n${JSON.stringify(reportData, null, 2)}\n\nReport would be downloaded as PDF.`);
+  };
+
+  const generateCustomReport = async () => {
+    if (!startDate || !endDate) {
+      alert('Please select both start and end dates.');
+      return;
+    }
+
+    setIsGenerating(true);
+
+    // Simulate custom report generation
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+    const customReportData = {
+      type: customReportType,
+      dateRange: `${startDate} to ${endDate}`,
+      format: reportFormat,
+      generatedAt: new Date().toISOString(),
+      data: 'Custom report data would be generated based on selected criteria'
+    };
+
+    setIsGenerating(false);
+
+    alert(`Custom ${customReportType} Generated Successfully!\n\nReport Details:\n${JSON.stringify(customReportData, null, 2)}\n\nReport would be downloaded as ${reportFormat}.`);
+  };
+
   // Review Land Requests Section
   if (activeSection === 'requests') {
-    const [requestFilter, setRequestFilter] = useState('All Requests');
-    const [selectedRequest, setSelectedRequest] = useState(null);
-    const [showModal, setShowModal] = useState(false);
-    const [modalType, setModalType] = useState('');
-    const [requests, setRequests] = useState([
-      { id: 'LR001', applicant: 'John Doe', type: 'Land Transfer', location: 'Kigali, Gasabo', priority: 'High', date: '2024-01-15', status: 'Pending', description: 'Request to transfer land ownership from John Doe to Mary Doe for residential purposes.' },
-      { id: 'LR002', applicant: 'Jane Smith', type: 'New Registration', location: 'Kigali, Nyarugenge', priority: 'Medium', date: '2024-01-14', status: 'Pending', description: 'New land registration for commercial development project.' },
-      { id: 'LR003', applicant: 'Mike Johnson', type: 'Ownership Change', location: 'Kigali, Kicukiro', priority: 'Low', date: '2024-01-13', status: 'Pending', description: 'Change of ownership due to inheritance.' }
-    ]);
-
-    const filteredRequests = requests.filter(request => {
-      if (requestFilter === 'All Requests') return true;
-      return request.priority === requestFilter.replace(' Priority', '');
-    });
-
-    const handleApprove = (request) => {
-      setRequests(prev => prev.map(r => r.id === request.id ? { ...r, status: 'Approved' } : r));
-      alert(`Request ${request.id} has been approved successfully!`);
-    };
-
-    const handleReject = (request) => {
-      setRequests(prev => prev.map(r => r.id === request.id ? { ...r, status: 'Rejected' } : r));
-      alert(`Request ${request.id} has been rejected.`);
-    };
-
-    const handleViewDetails = (request) => {
-      setSelectedRequest(request);
-      setModalType('details');
-      setShowModal(true);
-    };
 
     return (
       <div className="min-h-screen bg-gray-50">
@@ -840,35 +1006,6 @@ const OfficerDashboard = () => {
 
   // Verify Documents Section
   if (activeSection === 'documents') {
-    const [documentFilter, setDocumentFilter] = useState('All Documents');
-    const [selectedDocument, setSelectedDocument] = useState(null);
-    const [showDocModal, setShowDocModal] = useState(false);
-    const [documents, setDocuments] = useState([
-      { id: 'DOC001', type: 'Land Title', uploader: 'John Doe', date: '2024-01-15', status: 'Pending', description: 'Original land title document for Property LP001', fileUrl: '#' },
-      { id: 'DOC002', type: 'Transfer Deed', uploader: 'Jane Smith', date: '2024-01-14', status: 'Under Review', description: 'Transfer deed for commercial property', fileUrl: '#' },
-      { id: 'DOC003', type: 'Survey Report', uploader: 'Mike Johnson', date: '2024-01-13', status: 'Pending', description: 'Professional survey report with measurements', fileUrl: '#' },
-      { id: 'DOC004', type: 'Land Title', uploader: 'Sarah Wilson', date: '2024-01-12', status: 'Pending', description: 'Land title for residential property', fileUrl: '#' }
-    ]);
-
-    const filteredDocuments = documents.filter(doc => {
-      if (documentFilter === 'All Documents') return true;
-      return doc.type === documentFilter.replace('s', '');
-    });
-
-    const handleView = (document) => {
-      setSelectedDocument(document);
-      setShowDocModal(true);
-    };
-
-    const handleVerify = (document) => {
-      setDocuments(prev => prev.map(d => d.id === document.id ? { ...d, status: 'Verified' } : d));
-      alert(`Document ${document.id} has been verified successfully!`);
-    };
-
-    const handleReject = (document) => {
-      setDocuments(prev => prev.map(d => d.id === document.id ? { ...d, status: 'Rejected' } : d));
-      alert(`Document ${document.id} has been rejected.`);
-    };
 
     return (
       <div className="min-h-screen bg-gray-50">
@@ -940,7 +1077,7 @@ const OfficerDashboard = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
-                          onClick={() => handleView(document)}
+                          onClick={() => handleViewDoc(document)}
                           className="text-blue-600 hover:text-blue-900 mr-3"
                         >
                           View
@@ -954,7 +1091,7 @@ const OfficerDashboard = () => {
                               Verify
                             </button>
                             <button
-                              onClick={() => handleReject(document)}
+                              onClick={() => handleRejectDoc(document)}
                               className="text-red-600 hover:text-red-900"
                             >
                               Reject
@@ -1033,7 +1170,7 @@ const OfficerDashboard = () => {
                         </button>
                         <button
                           onClick={() => {
-                            handleReject(selectedDocument);
+                            handleRejectDoc(selectedDocument);
                             setShowDocModal(false);
                           }}
                           className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
@@ -1054,44 +1191,6 @@ const OfficerDashboard = () => {
 
   // Update Land Records Section
   if (activeSection === 'records') {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedRecord, setSelectedRecord] = useState(null);
-    const [showRecordModal, setShowRecordModal] = useState(false);
-    const [modalType, setModalType] = useState('');
-    const [showAddModal, setShowAddModal] = useState(false);
-    const [landRecords, setLandRecords] = useState([
-      { id: 'LP001', location: 'Kigali, Gasabo', owner: 'John Doe', area: '1,200', lastUpdated: '2024-01-10', status: 'Active', landUse: 'Residential', value: 'RWF 25M' },
-      { id: 'LP002', location: 'Kigali, Nyarugenge', owner: 'Jane Smith', area: '800', lastUpdated: '2024-01-08', status: 'Active', landUse: 'Commercial', value: 'RWF 18M' },
-      { id: 'LP003', location: 'Kigali, Kicukiro', owner: 'Mike Johnson', area: '1,500', lastUpdated: '2024-01-05', status: 'Pending Transfer', landUse: 'Agricultural', value: 'RWF 32M' }
-    ]);
-
-    const filteredRecords = landRecords.filter(record =>
-      record.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.owner.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.location.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    const handleEdit = (record) => {
-      setSelectedRecord(record);
-      setModalType('edit');
-      setShowRecordModal(true);
-    };
-
-    const handleViewHistory = (record) => {
-      setSelectedRecord(record);
-      setModalType('history');
-      setShowRecordModal(true);
-    };
-
-    const handleUpdateStatus = (record) => {
-      setSelectedRecord(record);
-      setModalType('status');
-      setShowRecordModal(true);
-    };
-
-    const handleAddNew = () => {
-      setShowAddModal(true);
-    };
 
     return (
       <div className="min-h-screen bg-gray-50">
@@ -1349,94 +1448,6 @@ const OfficerDashboard = () => {
 
   // Generate Reports Section
   if (activeSection === 'reports') {
-    const [customReportType, setCustomReportType] = useState('Activity Report');
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
-    const [reportFormat, setReportFormat] = useState('PDF');
-    const [isGenerating, setIsGenerating] = useState(false);
-
-    const generateQuickReport = async (reportType) => {
-      setIsGenerating(true);
-
-      // Simulate report generation
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Mock report data based on type
-      let reportData = {};
-      switch(reportType) {
-        case 'Monthly Activity Report':
-          reportData = {
-            title: 'Monthly Activity Report',
-            period: 'January 2024',
-            totalRequests: 45,
-            approvedRequests: 32,
-            rejectedRequests: 8,
-            pendingRequests: 5,
-            documentsVerified: 67,
-            newRegistrations: 12
-          };
-          break;
-        case 'Pending Requests Summary':
-          reportData = {
-            title: 'Pending Requests Summary',
-            totalPending: 23,
-            highPriority: 8,
-            mediumPriority: 10,
-            lowPriority: 5,
-            averageWaitTime: '3.2 days'
-          };
-          break;
-        case 'Land Parcel Status Report':
-          reportData = {
-            title: 'Land Parcel Status Report',
-            totalParcels: 3428,
-            activeParcels: 1890,
-            availableParcels: 1250,
-            underReview: 234,
-            disputed: 54
-          };
-          break;
-        case 'Document Verification Report':
-          reportData = {
-            title: 'Document Verification Report',
-            totalDocuments: 191,
-            verified: 145,
-            pending: 23,
-            rejected: 8,
-            underReview: 15
-          };
-          break;
-      }
-
-      setIsGenerating(false);
-
-      // Show report preview
-      alert(`${reportType} Generated Successfully!\n\nReport Summary:\n${JSON.stringify(reportData, null, 2)}\n\nReport would be downloaded as PDF.`);
-    };
-
-    const generateCustomReport = async () => {
-      if (!startDate || !endDate) {
-        alert('Please select both start and end dates.');
-        return;
-      }
-
-      setIsGenerating(true);
-
-      // Simulate custom report generation
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      const customReportData = {
-        type: customReportType,
-        dateRange: `${startDate} to ${endDate}`,
-        format: reportFormat,
-        generatedAt: new Date().toISOString(),
-        data: 'Custom report data would be generated based on selected criteria'
-      };
-
-      setIsGenerating(false);
-
-      alert(`Custom ${customReportType} Generated Successfully!\n\nReport Details:\n${JSON.stringify(customReportData, null, 2)}\n\nReport would be downloaded as ${reportFormat}.`);
-    };
 
     return (
       <div className="min-h-screen bg-gray-50">
