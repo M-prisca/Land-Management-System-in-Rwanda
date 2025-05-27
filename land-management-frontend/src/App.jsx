@@ -561,6 +561,7 @@ const AdminDashboard = () => {
 
 const OfficerDashboard = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const [activeSection, setActiveSection] = useState('dashboard');
 
   const handleLogout = () => {
     localStorage.removeItem('isAuthenticated');
@@ -568,6 +569,424 @@ const OfficerDashboard = () => {
     window.location.href = '/';
   };
 
+  // Officer-specific chart data
+  const weeklyReviewsData = {
+    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    datasets: [
+      {
+        label: 'Reviews Completed',
+        data: [12, 15, 8, 20, 18, 5, 3],
+        backgroundColor: 'rgba(34, 197, 94, 0.5)',
+        borderColor: 'rgba(34, 197, 94, 1)',
+        borderWidth: 2,
+      },
+    ],
+  };
+
+  const documentStatusData = {
+    labels: ['Verified', 'Pending', 'Rejected', 'Under Review'],
+    datasets: [
+      {
+        data: [145, 23, 8, 15],
+        backgroundColor: [
+          'rgba(34, 197, 94, 0.8)',
+          'rgba(251, 191, 36, 0.8)',
+          'rgba(239, 68, 68, 0.8)',
+          'rgba(59, 130, 246, 0.8)',
+        ],
+        borderWidth: 2,
+      },
+    ],
+  };
+
+  const requestTrendsData = {
+    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+    datasets: [
+      {
+        label: 'Land Requests',
+        data: [8, 12, 15, 18],
+        borderColor: 'rgba(34, 197, 94, 1)',
+        backgroundColor: 'rgba(34, 197, 94, 0.2)',
+        tension: 0.4,
+      },
+      {
+        label: 'Document Verifications',
+        data: [15, 18, 12, 22],
+        borderColor: 'rgba(59, 130, 246, 1)',
+        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+        tension: 0.4,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
+  };
+
+  const doughnutOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'bottom',
+      },
+    },
+  };
+
+  // Review Land Requests Section
+  if (activeSection === 'requests') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-6">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setActiveSection('dashboard')}
+                  className="text-green-600 hover:text-green-800"
+                >
+                  ← Back to Dashboard
+                </button>
+                <h1 className="text-3xl font-bold text-gray-900">Review Land Requests</h1>
+              </div>
+              <button onClick={handleLogout} className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                Logout
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="bg-white shadow rounded-lg p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold">Pending Land Requests</h2>
+              <div className="flex space-x-2">
+                <select className="border border-gray-300 rounded-md px-3 py-2">
+                  <option>All Requests</option>
+                  <option>High Priority</option>
+                  <option>Medium Priority</option>
+                  <option>Low Priority</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request ID</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Applicant</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request Type</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">LR001</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">John Doe</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Land Transfer</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Kigali, Gasabo</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">High</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-01-15</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button className="text-green-600 hover:text-green-900 mr-3">Approve</button>
+                      <button className="text-red-600 hover:text-red-900 mr-3">Reject</button>
+                      <button className="text-blue-600 hover:text-blue-900">View Details</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">LR002</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jane Smith</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">New Registration</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Kigali, Nyarugenge</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Medium</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-01-14</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button className="text-green-600 hover:text-green-900 mr-3">Approve</button>
+                      <button className="text-red-600 hover:text-red-900 mr-3">Reject</button>
+                      <button className="text-blue-600 hover:text-blue-900">View Details</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Verify Documents Section
+  if (activeSection === 'documents') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-6">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setActiveSection('dashboard')}
+                  className="text-green-600 hover:text-green-800"
+                >
+                  ← Back to Dashboard
+                </button>
+                <h1 className="text-3xl font-bold text-gray-900">Document Verification</h1>
+              </div>
+              <button onClick={handleLogout} className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                Logout
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="bg-white shadow rounded-lg p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold">Documents Pending Verification</h2>
+              <div className="flex space-x-2">
+                <select className="border border-gray-300 rounded-md px-3 py-2">
+                  <option>All Documents</option>
+                  <option>Land Titles</option>
+                  <option>Transfer Deeds</option>
+                  <option>Survey Reports</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Document ID</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Document Type</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Uploader</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Upload Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">DOC001</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Land Title</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">John Doe</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-01-15</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button className="text-blue-600 hover:text-blue-900 mr-3">View</button>
+                      <button className="text-green-600 hover:text-green-900 mr-3">Verify</button>
+                      <button className="text-red-600 hover:text-red-900">Reject</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">DOC002</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Transfer Deed</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jane Smith</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-01-14</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Under Review</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button className="text-blue-600 hover:text-blue-900 mr-3">View</button>
+                      <button className="text-green-600 hover:text-green-900 mr-3">Verify</button>
+                      <button className="text-red-600 hover:text-red-900">Reject</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Update Land Records Section
+  if (activeSection === 'records') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-6">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setActiveSection('dashboard')}
+                  className="text-green-600 hover:text-green-800"
+                >
+                  ← Back to Dashboard
+                </button>
+                <h1 className="text-3xl font-bold text-gray-900">Update Land Records</h1>
+              </div>
+              <button onClick={handleLogout} className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                Logout
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="bg-white shadow rounded-lg p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold">Land Records Management</h2>
+              <button className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700">
+                Add New Record
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Search by Parcel ID, Owner, or Location..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
+              />
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parcel ID</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Area (m²)</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">LP001</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Kigali, Gasabo</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">John Doe</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1,200</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-01-10</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button className="text-purple-600 hover:text-purple-900 mr-3">Edit</button>
+                      <button className="text-blue-600 hover:text-blue-900 mr-3">View History</button>
+                      <button className="text-green-600 hover:text-green-900">Update Status</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">LP002</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Kigali, Nyarugenge</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jane Smith</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">800</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-01-08</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button className="text-purple-600 hover:text-purple-900 mr-3">Edit</button>
+                      <button className="text-blue-600 hover:text-blue-900 mr-3">View History</button>
+                      <button className="text-green-600 hover:text-green-900">Update Status</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Generate Reports Section
+  if (activeSection === 'reports') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-6">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setActiveSection('dashboard')}
+                  className="text-green-600 hover:text-green-800"
+                >
+                  ← Back to Dashboard
+                </button>
+                <h1 className="text-3xl font-bold text-gray-900">Generate Reports</h1>
+              </div>
+              <button onClick={handleLogout} className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                Logout
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white shadow rounded-lg p-6">
+              <h2 className="text-xl font-semibold mb-4">Quick Reports</h2>
+              <div className="space-y-4">
+                <button className="w-full bg-orange-600 text-white px-4 py-3 rounded-md hover:bg-orange-700 text-left">
+                  📊 Monthly Activity Report
+                </button>
+                <button className="w-full bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700 text-left">
+                  📋 Pending Requests Summary
+                </button>
+                <button className="w-full bg-green-600 text-white px-4 py-3 rounded-md hover:bg-green-700 text-left">
+                  🏞️ Land Parcel Status Report
+                </button>
+                <button className="w-full bg-purple-600 text-white px-4 py-3 rounded-md hover:bg-purple-700 text-left">
+                  📄 Document Verification Report
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-white shadow rounded-lg p-6">
+              <h2 className="text-xl font-semibold mb-4">Custom Report Generator</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Report Type</label>
+                  <select className="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                    <option>Activity Report</option>
+                    <option>Performance Report</option>
+                    <option>Status Summary</option>
+                    <option>Financial Report</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Date Range</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="date" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                    <input type="date" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Format</label>
+                  <select className="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                    <option>PDF</option>
+                    <option>Excel</option>
+                    <option>CSV</option>
+                  </select>
+                </div>
+                <button className="w-full bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700">
+                  Generate Report
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Main Officer Dashboard with Charts
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -591,8 +1010,8 @@ const OfficerDashboard = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {/* Stats Cards */}
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-5">
                 <div className="flex items-center">
@@ -605,6 +1024,7 @@ const OfficerDashboard = () => {
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">Assigned Parcels</dt>
                       <dd className="text-2xl font-semibold text-gray-900">156</dd>
+                      <dd className="text-sm text-green-600">+8 this week</dd>
                     </dl>
                   </div>
                 </div>
@@ -623,6 +1043,7 @@ const OfficerDashboard = () => {
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">Pending Reviews</dt>
                       <dd className="text-2xl font-semibold text-gray-900">23</dd>
+                      <dd className="text-sm text-yellow-600">Requires attention</dd>
                     </dl>
                   </div>
                 </div>
@@ -641,6 +1062,26 @@ const OfficerDashboard = () => {
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">Completed Today</dt>
                       <dd className="text-2xl font-semibold text-gray-900">8</dd>
+                      <dd className="text-sm text-blue-600">Above average</dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                      <span className="text-white text-sm">📄</span>
+                    </div>
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">Documents Verified</dt>
+                      <dd className="text-2xl font-semibold text-gray-900">145</dd>
+                      <dd className="text-sm text-purple-600">This month</dd>
                     </dl>
                   </div>
                 </div>
@@ -648,20 +1089,59 @@ const OfficerDashboard = () => {
             </div>
           </div>
 
-          {/* Officer Actions */}
+          {/* Charts Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            {/* Weekly Reviews Chart */}
+            <div className="bg-white shadow rounded-lg p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Weekly Review Activity</h3>
+              <div className="h-64">
+                <Bar data={weeklyReviewsData} options={chartOptions} />
+              </div>
+            </div>
+
+            {/* Document Status Distribution */}
+            <div className="bg-white shadow rounded-lg p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Document Status Distribution</h3>
+              <div className="h-64">
+                <Doughnut data={documentStatusData} options={doughnutOptions} />
+              </div>
+            </div>
+          </div>
+
+          {/* Request Trends */}
+          <div className="bg-white shadow rounded-lg p-6 mb-8">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Monthly Request & Verification Trends</h3>
+            <div className="h-64">
+              <Line data={requestTrendsData} options={chartOptions} />
+            </div>
+          </div>
+
+          {/* Working Officer Action Buttons */}
           <div className="bg-white shadow rounded-lg p-6">
             <h2 className="text-lg font-medium text-gray-900 mb-4">Officer Actions</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button className="bg-green-600 text-white px-4 py-3 rounded-md hover:bg-green-700">
+              <button
+                onClick={() => setActiveSection('requests')}
+                className="bg-green-600 text-white px-4 py-3 rounded-md hover:bg-green-700 transition-colors"
+              >
                 Review Land Requests
               </button>
-              <button className="bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700">
+              <button
+                onClick={() => setActiveSection('documents')}
+                className="bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700 transition-colors"
+              >
                 Verify Documents
               </button>
-              <button className="bg-purple-600 text-white px-4 py-3 rounded-md hover:bg-purple-700">
+              <button
+                onClick={() => setActiveSection('records')}
+                className="bg-purple-600 text-white px-4 py-3 rounded-md hover:bg-purple-700 transition-colors"
+              >
                 Update Land Records
               </button>
-              <button className="bg-orange-600 text-white px-4 py-3 rounded-md hover:bg-orange-700">
+              <button
+                onClick={() => setActiveSection('reports')}
+                className="bg-orange-600 text-white px-4 py-3 rounded-md hover:bg-orange-700 transition-colors"
+              >
                 Generate Reports
               </button>
             </div>
@@ -674,6 +1154,7 @@ const OfficerDashboard = () => {
 
 const CitizenDashboard = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const [activeSection, setActiveSection] = useState('dashboard');
 
   const handleLogout = () => {
     localStorage.removeItem('isAuthenticated');
@@ -681,6 +1162,514 @@ const CitizenDashboard = () => {
     window.location.href = '/';
   };
 
+  // Citizen-specific chart data
+  const myRequestsData = {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    datasets: [
+      {
+        label: 'My Requests',
+        data: [1, 0, 2, 1, 0, 1],
+        backgroundColor: 'rgba(34, 197, 94, 0.5)',
+        borderColor: 'rgba(34, 197, 94, 1)',
+        borderWidth: 2,
+      },
+    ],
+  };
+
+  const requestStatusData = {
+    labels: ['Approved', 'Pending', 'Under Review'],
+    datasets: [
+      {
+        data: [3, 2, 1],
+        backgroundColor: [
+          'rgba(34, 197, 94, 0.8)',
+          'rgba(251, 191, 36, 0.8)',
+          'rgba(59, 130, 246, 0.8)',
+        ],
+        borderWidth: 2,
+      },
+    ],
+  };
+
+  const propertyValueData = {
+    labels: ['Property 1', 'Property 2', 'Property 3'],
+    datasets: [
+      {
+        label: 'Estimated Value (RWF)',
+        data: [25000000, 18000000, 32000000],
+        borderColor: 'rgba(168, 85, 247, 1)',
+        backgroundColor: 'rgba(168, 85, 247, 0.2)',
+        tension: 0.4,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
+  };
+
+  const doughnutOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'bottom',
+      },
+    },
+  };
+
+  // Submit Land Request Section
+  if (activeSection === 'submit-request') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-6">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setActiveSection('dashboard')}
+                  className="text-green-600 hover:text-green-800"
+                >
+                  ← Back to Dashboard
+                </button>
+                <h1 className="text-3xl font-bold text-gray-900">Submit Land Request</h1>
+              </div>
+              <button onClick={handleLogout} className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                Logout
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="bg-white shadow rounded-lg p-6">
+            <h2 className="text-xl font-semibold mb-6">New Land Request Form</h2>
+
+            <form className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Request Type</label>
+                  <select className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                    <option>Land Transfer</option>
+                    <option>New Registration</option>
+                    <option>Ownership Change</option>
+                    <option>Land Subdivision</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Priority</label>
+                  <select className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                    <option>Normal</option>
+                    <option>High</option>
+                    <option>Urgent</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Property Location</label>
+                <input type="text" placeholder="Enter property location" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Property Area (m²)</label>
+                <input type="number" placeholder="Enter area in square meters" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Request Description</label>
+                <textarea rows="4" placeholder="Describe your request in detail..." className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"></textarea>
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <button type="button" className="bg-gray-300 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-400">
+                  Save as Draft
+                </button>
+                <button type="submit" className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700">
+                  Submit Request
+                </button>
+              </div>
+            </form>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Upload Documents Section
+  if (activeSection === 'upload-documents') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-6">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setActiveSection('dashboard')}
+                  className="text-green-600 hover:text-green-800"
+                >
+                  ← Back to Dashboard
+                </button>
+                <h1 className="text-3xl font-bold text-gray-900">Upload Documents</h1>
+              </div>
+              <button onClick={handleLogout} className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                Logout
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white shadow rounded-lg p-6">
+              <h2 className="text-xl font-semibold mb-6">Upload New Document</h2>
+
+              <form className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Document Type</label>
+                  <select className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    <option>Land Title</option>
+                    <option>Transfer Deed</option>
+                    <option>Survey Report</option>
+                    <option>Identity Document</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Related Property</label>
+                  <select className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    <option>Property 1 - Kigali, Gasabo</option>
+                    <option>Property 2 - Kigali, Nyarugenge</option>
+                    <option>Property 3 - Kigali, Kicukiro</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Document File</label>
+                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                    <div className="space-y-1 text-center">
+                      <div className="text-gray-400">
+                        <svg className="mx-auto h-12 w-12" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                          <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        <label className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                          Choose file
+                          <input type="file" className="sr-only" />
+                        </label>
+                        <p className="pl-1">or drag and drop</p>
+                      </div>
+                      <p className="text-xs text-gray-500">PDF, PNG, JPG up to 10MB</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Description</label>
+                  <textarea rows="3" placeholder="Brief description of the document..." className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+
+                <button type="submit" className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                  Upload Document
+                </button>
+              </form>
+            </div>
+
+            <div className="bg-white shadow rounded-lg p-6">
+              <h2 className="text-xl font-semibold mb-6">My Documents</h2>
+
+              <div className="space-y-4">
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-900">Land Title - Property 1</h3>
+                      <p className="text-sm text-gray-500">Uploaded: 2024-01-10</p>
+                    </div>
+                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Verified</span>
+                  </div>
+                </div>
+
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-900">Survey Report - Property 2</h3>
+                      <p className="text-sm text-gray-500">Uploaded: 2024-01-08</p>
+                    </div>
+                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                  </div>
+                </div>
+
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-900">Transfer Deed - Property 3</h3>
+                      <p className="text-sm text-gray-500">Uploaded: 2024-01-05</p>
+                    </div>
+                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Under Review</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // View My Properties Section
+  if (activeSection === 'my-properties') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-6">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setActiveSection('dashboard')}
+                  className="text-green-600 hover:text-green-800"
+                >
+                  ← Back to Dashboard
+                </button>
+                <h1 className="text-3xl font-bold text-gray-900">My Properties</h1>
+              </div>
+              <button onClick={handleLogout} className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                Logout
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Property 1 */}
+            <div className="bg-white shadow rounded-lg overflow-hidden">
+              <div className="px-6 py-4">
+                <h3 className="text-lg font-medium text-gray-900">Property 1</h3>
+                <p className="text-sm text-gray-500">Kigali, Gasabo District</p>
+              </div>
+              <div className="px-6 py-4 bg-gray-50">
+                <dl className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <dt className="font-medium text-gray-500">Area</dt>
+                    <dd className="text-gray-900">1,200 m²</dd>
+                  </div>
+                  <div>
+                    <dt className="font-medium text-gray-500">Status</dt>
+                    <dd><span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span></dd>
+                  </div>
+                  <div>
+                    <dt className="font-medium text-gray-500">Land Use</dt>
+                    <dd className="text-gray-900">Residential</dd>
+                  </div>
+                  <div>
+                    <dt className="font-medium text-gray-500">Value</dt>
+                    <dd className="text-gray-900">RWF 25M</dd>
+                  </div>
+                </dl>
+              </div>
+              <div className="px-6 py-4">
+                <button className="w-full bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700">
+                  View Details
+                </button>
+              </div>
+            </div>
+
+            {/* Property 2 */}
+            <div className="bg-white shadow rounded-lg overflow-hidden">
+              <div className="px-6 py-4">
+                <h3 className="text-lg font-medium text-gray-900">Property 2</h3>
+                <p className="text-sm text-gray-500">Kigali, Nyarugenge District</p>
+              </div>
+              <div className="px-6 py-4 bg-gray-50">
+                <dl className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <dt className="font-medium text-gray-500">Area</dt>
+                    <dd className="text-gray-900">800 m²</dd>
+                  </div>
+                  <div>
+                    <dt className="font-medium text-gray-500">Status</dt>
+                    <dd><span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span></dd>
+                  </div>
+                  <div>
+                    <dt className="font-medium text-gray-500">Land Use</dt>
+                    <dd className="text-gray-900">Commercial</dd>
+                  </div>
+                  <div>
+                    <dt className="font-medium text-gray-500">Value</dt>
+                    <dd className="text-gray-900">RWF 18M</dd>
+                  </div>
+                </dl>
+              </div>
+              <div className="px-6 py-4">
+                <button className="w-full bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700">
+                  View Details
+                </button>
+              </div>
+            </div>
+
+            {/* Property 3 */}
+            <div className="bg-white shadow rounded-lg overflow-hidden">
+              <div className="px-6 py-4">
+                <h3 className="text-lg font-medium text-gray-900">Property 3</h3>
+                <p className="text-sm text-gray-500">Kigali, Kicukiro District</p>
+              </div>
+              <div className="px-6 py-4 bg-gray-50">
+                <dl className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <dt className="font-medium text-gray-500">Area</dt>
+                    <dd className="text-gray-900">1,500 m²</dd>
+                  </div>
+                  <div>
+                    <dt className="font-medium text-gray-500">Status</dt>
+                    <dd><span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending Transfer</span></dd>
+                  </div>
+                  <div>
+                    <dt className="font-medium text-gray-500">Land Use</dt>
+                    <dd className="text-gray-900">Agricultural</dd>
+                  </div>
+                  <div>
+                    <dt className="font-medium text-gray-500">Value</dt>
+                    <dd className="text-gray-900">RWF 32M</dd>
+                  </div>
+                </dl>
+              </div>
+              <div className="px-6 py-4">
+                <button className="w-full bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700">
+                  View Details
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Track Request Status Section
+  if (activeSection === 'track-requests') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-6">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setActiveSection('dashboard')}
+                  className="text-green-600 hover:text-green-800"
+                >
+                  ← Back to Dashboard
+                </button>
+                <h1 className="text-3xl font-bold text-gray-900">Track Request Status</h1>
+              </div>
+              <button onClick={handleLogout} className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                Logout
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="bg-white shadow rounded-lg p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold">My Land Requests</h2>
+              <button
+                onClick={() => setActiveSection('submit-request')}
+                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+              >
+                Submit New Request
+              </button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request ID</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">LR001</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Land Transfer</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Property 3</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Under Review</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-01-10</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-blue-600 h-2 rounded-full" style={{width: '60%'}}></div>
+                      </div>
+                      <span className="text-xs text-gray-500">60% Complete</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button className="text-orange-600 hover:text-orange-900">View Details</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">LR002</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">New Registration</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Property 4</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-01-08</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-yellow-600 h-2 rounded-full" style={{width: '25%'}}></div>
+                      </div>
+                      <span className="text-xs text-gray-500">25% Complete</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button className="text-orange-600 hover:text-orange-900">View Details</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">LR003</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Ownership Change</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Property 1</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Approved</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-01-05</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-green-600 h-2 rounded-full" style={{width: '100%'}}></div>
+                      </div>
+                      <span className="text-xs text-gray-500">100% Complete</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button className="text-orange-600 hover:text-orange-900">View Details</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Main Citizen Dashboard with Charts
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -704,8 +1693,8 @@ const CitizenDashboard = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {/* Stats Cards */}
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-5">
                 <div className="flex items-center">
@@ -718,6 +1707,7 @@ const CitizenDashboard = () => {
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">My Land Parcels</dt>
                       <dd className="text-2xl font-semibold text-gray-900">3</dd>
+                      <dd className="text-sm text-green-600">Total value: RWF 75M</dd>
                     </dl>
                   </div>
                 </div>
@@ -736,6 +1726,7 @@ const CitizenDashboard = () => {
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">Active Requests</dt>
                       <dd className="text-2xl font-semibold text-gray-900">2</dd>
+                      <dd className="text-sm text-yellow-600">1 pending review</dd>
                     </dl>
                   </div>
                 </div>
@@ -754,6 +1745,26 @@ const CitizenDashboard = () => {
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">My Documents</dt>
                       <dd className="text-2xl font-semibold text-gray-900">7</dd>
+                      <dd className="text-sm text-blue-600">5 verified</dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                      <span className="text-white text-sm">✅</span>
+                    </div>
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">Completed Requests</dt>
+                      <dd className="text-2xl font-semibold text-gray-900">5</dd>
+                      <dd className="text-sm text-purple-600">This year</dd>
                     </dl>
                   </div>
                 </div>
@@ -761,20 +1772,59 @@ const CitizenDashboard = () => {
             </div>
           </div>
 
-          {/* Citizen Actions */}
+          {/* Charts Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            {/* My Requests Over Time */}
+            <div className="bg-white shadow rounded-lg p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">My Requests Over Time</h3>
+              <div className="h-64">
+                <Bar data={myRequestsData} options={chartOptions} />
+              </div>
+            </div>
+
+            {/* Request Status Distribution */}
+            <div className="bg-white shadow rounded-lg p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Request Status Distribution</h3>
+              <div className="h-64">
+                <Doughnut data={requestStatusData} options={doughnutOptions} />
+              </div>
+            </div>
+          </div>
+
+          {/* Property Values Chart */}
+          <div className="bg-white shadow rounded-lg p-6 mb-8">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">My Property Values</h3>
+            <div className="h-64">
+              <Line data={propertyValueData} options={chartOptions} />
+            </div>
+          </div>
+
+          {/* Working Citizen Action Buttons */}
           <div className="bg-white shadow rounded-lg p-6">
             <h2 className="text-lg font-medium text-gray-900 mb-4">Available Services</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button className="bg-green-600 text-white px-4 py-3 rounded-md hover:bg-green-700">
+              <button
+                onClick={() => setActiveSection('submit-request')}
+                className="bg-green-600 text-white px-4 py-3 rounded-md hover:bg-green-700 transition-colors"
+              >
                 Submit Land Request
               </button>
-              <button className="bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700">
+              <button
+                onClick={() => setActiveSection('upload-documents')}
+                className="bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700 transition-colors"
+              >
                 Upload Documents
               </button>
-              <button className="bg-purple-600 text-white px-4 py-3 rounded-md hover:bg-purple-700">
+              <button
+                onClick={() => setActiveSection('my-properties')}
+                className="bg-purple-600 text-white px-4 py-3 rounded-md hover:bg-purple-700 transition-colors"
+              >
                 View My Properties
               </button>
-              <button className="bg-orange-600 text-white px-4 py-3 rounded-md hover:bg-orange-700">
+              <button
+                onClick={() => setActiveSection('track-requests')}
+                className="bg-orange-600 text-white px-4 py-3 rounded-md hover:bg-orange-700 transition-colors"
+              >
                 Track Request Status
               </button>
             </div>
