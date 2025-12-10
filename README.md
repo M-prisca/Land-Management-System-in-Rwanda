@@ -36,5 +36,5 @@ ownership management, land document requests, and more.
 
 ### Other Tools
 - Git & GitHub (version control)
-- Postman (API testing)
+- Thunder (API testing)
 
